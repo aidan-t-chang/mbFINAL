@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 
-const server = new WebSocketServer({ port: 8080 });
+const server = new WebSocketServer({ port: 8081 });
 
 server.on('connection', socket => {
 
