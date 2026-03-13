@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import "./home.css";
 
 
 function Home() {
@@ -20,7 +22,7 @@ function Home() {
   }, []);
 
   return (
-    <>
+    <div className="home-container">
       <div>
         <h1>Messages</h1>
         <ul>
@@ -31,9 +33,9 @@ function Home() {
         <button onClick={() => socket?.send("hello")}>Send messages</button>
       </div>
       <div>
-        <button>login</button>
+        <Link href="/login">create account</Link>
       </div>
-    </>
+    </div>
   )
 }
 
