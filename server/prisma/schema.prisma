@@ -4,6 +4,8 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// run `npx prisma generate` and `npx prisma migrate dev --name <name>` from mb/server
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,19 +15,17 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement()) 
-  email    String  @unique
-  username     String?
-  password String 
-  salt     String
-  posts    Post[]
+  id            Int         @id @default(autoincrement()) 
+  email         String      @unique
+  username      String
+  password      String 
+  salt          String
+  createdAt     DateTime    @default(now())
+  lastOnline    DateTime    @default(now())
+  totalExp      Int         @default(0)
+  level         Int         @default(0)
+  rank          String      @default("Unranked")
+  gamesPlayed   Int         @default(0)
+  timePlayed    Float       @default(0.0)
+  followers     Int         @default(0)
 } 
-
-model Post { 
-  id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  authorId  Int
-  author    User    @relation(fields: [authorId], references: [id]) 
-}  
