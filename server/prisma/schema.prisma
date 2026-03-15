@@ -28,4 +28,26 @@ model User {
   gamesPlayed   Int         @default(0)
   timePlayed    Float       @default(0.0)
   followers     Int         @default(0)
+  
+  friendshipsInitiated Friendship[] @relation("UserFriendships")
+  friendshipsReceived  Friendship[] @relation("FriendFriendships")
 } 
+
+model Friendship {
+  id        Int      @id @default(autoincrement())
+  
+  // The user who sent the friend request
+  userId    Int      
+  user      User     @relation("UserFriendships", fields: [userId], references: [id])
+  
+  // The user who received the friend request
+  friendId  Int      
+  friend    User     @relation("FriendFriendships", fields: [friendId], references: [id])
+  
+  // Friendship state (e.g., PENDING, ACCEPTED, BLOCKED)
+  status    String   @default("PENDING") 
+  createdAt DateTime @default(now())
+
+  // Ensure a user can't send multiple requests to the exact same person
+  @@unique([userId, friendId]) 
+}

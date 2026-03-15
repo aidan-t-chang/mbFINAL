@@ -73,4 +73,4 @@ async function login(formData: FormData) {
     }
 }
 
-export { createAccount, };
+export { createAccount, login};
