@@ -51,3 +51,19 @@ model Friendship {
   // Ensure a user can't send multiple requests to the exact same person
   @@unique([userId, friendId]) 
 }
+
+model Game {
+  id        Int        @id @default(autoincrement())
+  status    String     @default("WAITING") // WAITING, IN_PROGRESS, FINISHED
+  createdAt DateTime   @default(now())
+  questions Question[] 
+}
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  gameId        Int
+  game          Game     @relation(fields: [gameId], references: [id])
+  question      String // 2+2
+  correctAnswer String // 4
+  options       String[] // Array of all options 
+}

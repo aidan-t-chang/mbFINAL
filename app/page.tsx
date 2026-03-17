@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./home.css";
 
-
+const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 function Home() {
   const [messages, setMessages] = useState<string[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [roomId, setRoomId] = useState("");
 
   useEffect(() => {
+    setRoomId(generateRoomId());
     const ws = new WebSocket("ws://localhost:8081");
 
     ws.onmessage = ({ data }) => {
@@ -34,6 +36,9 @@ function Home() {
       </div>
       <div>
         <Link href="/login">create account</Link>
+      </div>
+      <div>
+        <Link href={`/game/${roomId}`}>play game</Link>
       </div>
     </div>
   )
