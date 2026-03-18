@@ -1,18 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { createAccount, login } from "../actions";
+import { useState, useEffect } from "react";
+import { createAccount, login, logout } from "../actions";
+import { getCurrentUser } from "../actions";
+import { useRouter } from "next/navigation";
 import toast from 'react-hot-toast';
 import "./login.css";
 
 export default function LoginPage() {
     const [userLogin, setuserLogin] = useState(true);
+    const [user, setUser] = useState<any>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        async function fetchUser() {
+            const loggedInUser = await getCurrentUser();
+            setUser(loggedInUser);
+            if (loggedInUser) {
+                router.push("/");
+            }
+        }
+        fetchUser();
+    }, [router]);
+
+
     const handleSubmit = async (formData: FormData) => {
         if (userLogin) {
             const result = await login(formData);
 
             if (result.success) {
                 toast.success("Logged in successfully!");
+                router.push("/");
             } else {
                 toast.error("Error logging in: " + result.error);
                 console.log(result.error);

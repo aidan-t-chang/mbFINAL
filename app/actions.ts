@@ -2,6 +2,7 @@
 
 import { prisma } from "../server/src/db/index";
 import crypto from "crypto";
+import { cookies } from "next/headers";
 
 async function createAccount(formData: FormData) {
     const email = formData.get("email") as string;
@@ -67,10 +68,39 @@ async function login(formData: FormData) {
             return { success: false, error: "Invalid email or password" };
         }
 
+        const cookieStore = await cookies();
+        cookieStore.set("sessionId", user.id.toString(), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 60 * 60 * 24 * 7, // 1 week
+        });
+
         return { success: true, user: { id: user.id, email: user.email, username: user.username } };
     } catch (error: any) {
         return { success: false, error: error };
     }
 }
 
-export { createAccount, login};
+async function getCurrentUser() {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("sessionId")?.value;
+
+    if (!sessionId) {
+        return null;
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: parseInt(sessionId) },
+        select: { id: true, email: true, username: true }
+    });
+
+    return user;
+}
+
+async function logout() {
+    const cookieStore = await cookies()
+    cookieStore.delete("sessionId");
+}
+
+export { createAccount, login, getCurrentUser, logout};
