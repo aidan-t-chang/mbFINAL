@@ -2,13 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import "./home.css";
 
 const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 function Home() {
+  const router = useRouter();
+
   const [messages, setMessages] = useState<string[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [roomId, setRoomId] = useState("");
+  const [joinRoomId, setJoinRoomId] = useState("");
+
+  const handleJoinRoom = () => {
+    if (joinRoomId.trim()) {
+      router.push(`/game/${joinRoomId.trim()}`); 
+    }
+  };
 
   useEffect(() => {
     setRoomId(generateRoomId());
@@ -38,7 +48,17 @@ function Home() {
         <Link href="/login">create account</Link>
       </div>
       <div>
-        <Link href={`/game/${roomId}`}>play game</Link>
+        <Link href={`/game/${roomId}`}>create new game</Link>
+      </div>
+      <div>
+        <input 
+          type="text"
+          placeholder="room id"
+          value={joinRoomId}
+          onChange={(e) => setJoinRoomId(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+        />
+        <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
       </div>
     </div>
   )

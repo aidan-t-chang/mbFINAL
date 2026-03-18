@@ -15,22 +15,24 @@ datasource db {
 }
 
 model User {
-  id            Int         @id @default(autoincrement()) 
-  email         String      @unique
-  username      String
-  password      String 
-  salt          String
-  createdAt     DateTime    @default(now())
-  lastOnline    DateTime    @default(now())
-  totalExp      Int         @default(0)
-  level         Int         @default(0)
-  rank          String      @default("Unranked")
-  gamesPlayed   Int         @default(0)
-  timePlayed    Float       @default(0.0)
-  followers     Int         @default(0)
+  id                   Int          @id @default(autoincrement()) 
+  email                String       @unique
+  username             String
+  password             String 
+  salt                 String
+  createdAt            DateTime     @default(now())
+  lastOnline           DateTime     @default(now())
+  totalExp             Int          @default(0)
+  level                Int          @default(0)
+  rank                 String       @default("Unranked")
+  gamesPlayed          Int          @default(0)
+  timePlayed           Float        @default(0.0)
+  followers            Int          @default(0)
   
   friendshipsInitiated Friendship[] @relation("UserFriendships")
   friendshipsReceived  Friendship[] @relation("FriendFriendships")
+
+  gameHistory          GamePlayer[]
 } 
 
 model Friendship {
@@ -56,7 +58,28 @@ model Game {
   id        Int        @id @default(autoincrement())
   status    String     @default("WAITING") // WAITING, IN_PROGRESS, FINISHED
   createdAt DateTime   @default(now())
+
   questions Question[] 
+  players   GamePlayer[]
+}
+
+model GamePlayer {
+  id        Int      @id @default(autoincrement())
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  
+  gameId    Int
+  game      Game     @relation(fields: [gameId], references: [id])
+
+  // Track their performance for this specific match
+  score     Int      @default(0)
+  isWinner  Boolean  @default(false)
+  
+  joinedAt  DateTime @default(now())
+
+  // Ensure a user can't join the same game twice
+  @@unique([userId, gameId]) 
 }
 
 model Question {
