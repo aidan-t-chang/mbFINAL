@@ -58,6 +58,7 @@ model Game {
   id        Int        @id @default(autoincrement())
   status    String     @default("WAITING") // WAITING, IN_PROGRESS, FINISHED
   createdAt DateTime   @default(now())
+  type      String     // custom, competitive, training, etc.
 
   questions Question[] 
   players   GamePlayer[]

@@ -73,7 +73,7 @@ async function login(formData: FormData) {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 60 * 60 * 24 * 7, // 1 week
+            maxAge: 60 * 60 * 24 * 30, // 1 month
         });
 
         return { success: true, user: { id: user.id, email: user.email, username: user.username } };
