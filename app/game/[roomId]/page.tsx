@@ -12,8 +12,9 @@ export default function Game() {
     const { roomId } = useParams();
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [user, setUser] = useState<any>(null);
-    // placeholder answers
-    const [answers, setAnswers] = useState<string[]>(["answer1", "answer2", "answer3", "answer4"]);
+    // there is only one answer-- the user submits free response
+    const [answer, setAnswer] = useState<string | null>(null);
+    const [players, setPlayers] = useState<{ id: string, username: string}[]>([]);
     const router = useRouter();
 
     const handleAnswer = (answer: string) => {
@@ -41,7 +42,10 @@ export default function Game() {
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (data.type === "START_GAME") {
+            if (data.type === "PLAYER_JOIN") {
+                setPlayers(data.players);
+                toast.success(`someone has joined the game`);
+            } else if (data.type === "START_GAME") {
                 toast.success("Game is ready!");
                 console.log("Game is ready");
             } else if (data.type === "GAME_ACTION") {
@@ -77,13 +81,25 @@ export default function Game() {
     return (
         <>
             <div>gameroom {roomId}</div>
-            {answers.map((answer, index) => (
-                <button key={index} onClick={() => handleAnswer(`${answer}`)}>
-                    {answer}
-                </button>
-            ))}
+            <div>
+                <h2>players:</h2>
+                <ul>
+                    {players.map((p, index) => (
+                        <li key={index}>
+                            {p.username} {p.id === user.id ? "(you)" : ""}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div>
+                <h2>question:</h2>
+                <p>this the question fr</p>
+                <input type="text" placeholder="answer" onChange={(e) => setAnswer(e.target.value)} />
+            </div>
         </>
     )
+    // set it later so that pressing enter submits the answer and add a submit button for mobile users maybe
+    // eventually separate ui into game lobby vs game in progress
         
 
 }
