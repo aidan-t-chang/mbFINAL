@@ -55,7 +55,7 @@ model Friendship {
 }
 
 model Game {
-  id        Int        @id @default(autoincrement())
+  id        String     @id 
   status    String     @default("WAITING") // WAITING, IN_PROGRESS, FINISHED
   createdAt DateTime   @default(now())
   type      String     // custom, competitive, training, etc.
@@ -70,24 +70,21 @@ model GamePlayer {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   
-  gameId    Int
+  gameId    String
   game      Game     @relation(fields: [gameId], references: [id])
 
-  // Track their performance for this specific match
   score     Int      @default(0)
   isWinner  Boolean  @default(false)
   
   joinedAt  DateTime @default(now())
 
-  // Ensure a user can't join the same game twice
   @@unique([userId, gameId]) 
 }
 
 model Question {
   id            Int      @id @default(autoincrement())
-  gameId        Int
+  gameId        String
   game          Game     @relation(fields: [gameId], references: [id])
   question      String // 2+2
   correctAnswer String // 4
-  options       String[] // Array of all options 
 }

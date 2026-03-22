@@ -95,6 +95,7 @@ export default function Game() {
                 <h2>question:</h2>
                 <p>this the question fr</p>
                 <input type="text" placeholder="answer" onChange={(e) => setAnswer(e.target.value)} />
+                // clear input after submit and then disable
             </div>
         </>
     )
