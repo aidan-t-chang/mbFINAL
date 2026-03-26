@@ -85,13 +85,19 @@ async function login(formData: FormData) {
 async function getCurrentUser() {
     const cookieStore = await cookies();
     const sessionId = cookieStore.get("sessionId")?.value;
+    console.log("Session ID from cookie:", sessionId);
 
     if (!sessionId) {
         return null;
     }
 
+    const parsedId = Number(sessionId);
+    if (isNaN(parsedId)) {
+        return null;
+    }
+
     const user = await prisma.user.findUnique({
-        where: { id: parseInt(sessionId) },
+        where: { id: parsedId },
         select: { id: true, email: true, username: true }
     });
 

@@ -1,5 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { prisma } from "./db/index.js";
+import { Prisma } from "@prisma/client";
+import "dotenv/config";
 
 const server = new WebSocketServer({ port: 8081 });
 
@@ -30,29 +32,24 @@ server.on('connection', socket => {
             const roomId = data.roomId;
             const user = data.user;
 
-            // create room if it doesn't exist
-            if (!rooms.has(roomId)) {
-                rooms.set(roomId, new Map());
-            }
+            let isFirstPlayer = false;
+            let room = rooms.get(roomId);
 
-            try {
-                await prisma.game.upsert({
-                    where: { id: roomId },
-                    update: {},
-                    create: {
-                        id: roomId,
-                        status: "WAITING",
-                        type: "standard" // change this depending on the gamemode
-                    }
-                });
-            } catch (e) {
-                console.error("Error creating/upserting game:", e);
+            if (!room) {
+                isFirstPlayer = true;
+                room = new Map();
+                rooms.set(roomId, room);
             }
-
-            const room = rooms.get(roomId)!;
 
             if (room.size >= 2) {
                 socket.send(JSON.stringify({ type: "ERROR", message: "Room is full" }));
+                return;
+            }
+
+            const userAlreadyInRoom = Array.from(room.values()).some((u) => u.id === user.id);
+
+            if (userAlreadyInRoom) {
+                socket.send(JSON.stringify({ type: "ERROR", message: `User already in room ${roomId}` }));
                 return;
             }
 
@@ -60,28 +57,43 @@ server.on('connection', socket => {
             currentRoomId = roomId;
             currentUser = user;
 
-            try {
-                await prisma.gamePlayer.upsert({
-                    where: {
-                        userId_gameId: {
-                            userId: user.id,
-                            gameId: roomId
+            if (isFirstPlayer) {
+                try {
+                    await prisma.game.create({
+                        data: {
+                            id: roomId,
+                            status: "WAITING",
+                            type: "standard" // change this later
                         }
-                    }, 
-                    update: {},
-                    create: {
-                        userId: user.id,
-                        gameId: roomId
+                    });
+                } catch (e) {
+                    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+                        console.log(`Game with ID ${roomId} already exists. Skipping creation`);
+                    } else {
+                    console.error("Error creating game:", e);
+                    }
+                }
+            }
+
+            // every player creates a GamePlayer
+            try {
+                await prisma.gamePlayer.create({
+                    data: {
+                        userId: Number(user.id),
+                        gameId: roomId,
                     }
                 });
             } catch (e) {
-                console.error("Error creating/upserting player:", e);
+                if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+                    console.log(`GamePlayer for user ${user.id} in game ${roomId} already exists. Skipping creation`);
+                } else {
+                    console.error("Error creating game player:", e);
+                }
             }
 
             socket.send(JSON.stringify({ type: "SUCCESS", message: `Joined room ${roomId}` }));
 
             getRoomUpdate(roomId);
-
             if (room.size === 2) {
                 try {
                     await prisma.game.update({
