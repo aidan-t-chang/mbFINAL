@@ -73,6 +73,15 @@ server.on('connection', socket => {
                     console.error("Error creating game:", e);
                     }
                 }
+            } else {
+                try {
+                    await prisma.game.update({
+                        where: { id: roomId },
+                        data: { status: "ROOM_FULL" }
+                    })
+                } catch (e) {
+                    console.error("Error updating game status:", e);
+                }
             }
 
             // every player creates a GamePlayer
