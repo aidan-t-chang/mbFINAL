@@ -15,6 +15,7 @@ export default function Game() {
     // there is only one answer-- the user submits free response
     const [answer, setAnswer] = useState<string | null>(null);
     const [players, setPlayers] = useState<{ id: string, username: string}[]>([]);
+    const [isReady, setIsReady] = useState(false);
     const router = useRouter();
 
     const handleAnswer = (answer: string) => {
@@ -25,6 +26,10 @@ export default function Game() {
                 user: { id: user.id, username: user.username }
             }));
         }
+    }
+
+    const handleStartGame = () => {
+        console.log("strating game n stuff");
     }
 
     useEffect(() => {
@@ -45,9 +50,9 @@ export default function Game() {
             if (data.type === "PLAYER_JOIN") {
                 setPlayers(data.players);
                 toast.success(`someone has joined the game`);
-            } else if (data.type === "START_GAME") {
+            } else if (data.type === "GAME_READY") {
                 toast.success("Game is ready!");
-                console.log("Game is ready");
+                setIsReady(true);
             } else if (data.type === "GAME_ACTION") {
                 console.log("Game action received: ", data.action);
             }
@@ -90,6 +95,9 @@ export default function Game() {
                         </li>
                     ))}
                 </ul>
+            </div>
+            <div>
+                <button className="game-button" disabled={!isReady} onClick={handleStartGame}>Start Game</button>
             </div>
             <div>
                 <h2>question:</h2>

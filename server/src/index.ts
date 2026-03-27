@@ -114,7 +114,7 @@ server.on('connection', socket => {
                 }
                 // change later to send to server to change buttons to game start state
                 room.forEach((_, client) => {
-                    client.send(JSON.stringify({ type: "START_GAME", message: "Game is starting!" }));
+                    client.send(JSON.stringify({ type: "GAME_READY", message: "Game is starting!" }));
                 })
             }
         } else if (data.type === "GAME_ACTION") {
