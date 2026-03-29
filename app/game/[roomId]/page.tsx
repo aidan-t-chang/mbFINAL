@@ -4,15 +4,12 @@ import { useEffect, useState, use } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getCurrentUser } from "../../actions";
 import toast from "react-hot-toast";
-import Link from "next/link";
 import "./game.css";
-import { get } from "http";
 
 export default function Game() {
     const { roomId } = useParams();
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [user, setUser] = useState<any>(null);
-    // there is only one answer-- the user submits free response
     const [answer, setAnswer] = useState<string | null>(null);
     const [players, setPlayers] = useState<{ id: string, username: string}[]>([]);
     const [isReady, setIsReady] = useState(false);
@@ -85,20 +82,6 @@ export default function Game() {
 
     return (
         <>
-            <div>gameroom {roomId}</div>
-            <div>
-                <h2>players:</h2>
-                <ul>
-                    {players.map((p, index) => (
-                        <li key={index}>
-                            {p.username} {p.id === user.id ? "(you)" : ""}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <div>
-                <button className="game-button" disabled={!isReady} onClick={handleStartGame}>Start Game</button>
-            </div>
             <div>
                 <h2>question:</h2>
                 <p>this the question fr</p>
