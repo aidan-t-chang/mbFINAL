@@ -21,6 +21,40 @@ function getRoomUpdate(roomId: string) {
     });
 }
 
+async function generateAddition(roomId: string, numQuestions: number) {
+    // create the math questions, the answers, and put them in the database
+    const newQuestions = [];
+    const uniqueQuestions = new Set<string>();
+
+    while (newQuestions.length < numQuestions) {
+        const num1 = Math.floor(Math.random() * 40) + 1; // 1-40
+        const num2 = Math.floor(Math.random() * 40) + 1; // 1-40
+
+        const questionText = `${num1} + ${num2}`;
+        const answer = (num1 + num2);
+
+        if (!uniqueQuestions.has(questionText)) {
+            uniqueQuestions.add(questionText);
+            newQuestions.push({
+                gameId: roomId,
+                question: questionText,
+                correctAnswer: answer
+            });
+        }
+    }
+
+    try {
+        await prisma.question.createMany({
+            data: newQuestions
+        });
+        console.log(`Created ${numQuestions} questions for game ${roomId}`);
+        return newQuestions;
+    } catch (e) {
+        console.error("Error creating questions:", e);
+        return null;
+    }
+}
+
 server.on('connection', socket => {
     let currentRoomId: string | null = null;
     let currentUser: any = null;

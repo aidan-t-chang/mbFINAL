@@ -85,6 +85,6 @@ model Question {
   id            Int      @id @default(autoincrement())
   gameId        String
   game          Game     @relation(fields: [gameId], references: [id])
-  question      String // 2+2
-  correctAnswer String // 4
+  question      String   // "2+2" 
+  correctAnswer Int      // 4
 }
