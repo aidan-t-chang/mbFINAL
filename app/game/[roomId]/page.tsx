@@ -3,8 +3,10 @@
 import { useEffect, useState, use } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getCurrentUser } from "../../actions";
+import "./CustomLobby";
 import toast from "react-hot-toast";
 import "./game.css";
+import CustomLobby from "./CustomLobby";
 
 export default function Game() {
     const { roomId } = useParams();
@@ -27,6 +29,7 @@ export default function Game() {
 
     const handleStartGame = () => {
         console.log("strating game n stuff");
+        router.push(`/game/${roomId}/activegame`);
     }
 
     useEffect(() => {
@@ -43,6 +46,7 @@ export default function Game() {
         };
 
         ws.onmessage = (event) => {
+            // game state updates here
             const data = JSON.parse(event.data);
             if (data.type === "PLAYER_JOIN") {
                 setPlayers(data.players);
@@ -53,7 +57,6 @@ export default function Game() {
             } else if (data.type === "GAME_ACTION") {
                 console.log("Game action received: ", data.action);
             }
-            // game state updates here
         };
 
         setSocket(ws);
@@ -82,16 +85,22 @@ export default function Game() {
 
     return (
         <>
+            <div>gameroom {roomId}</div>
             <div>
-                <h2>question:</h2>
-                <p>this the question fr</p>
-                <input type="text" placeholder="answer" onChange={(e) => setAnswer(e.target.value)} />
-                // clear input after submit and then disable
+                <h2>players:</h2>
+                <ul>
+                    {players.map((p, index) => (
+                        <li key={index}>
+                            {p.username} {p.id === user.id ? "(you)" : ""}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div>
+                <button className="game-button" disabled={!isReady} onClick={handleStartGame}>Start Game</button>
             </div>
         </>
     )
     // set it later so that pressing enter submits the answer and add a submit button for mobile users maybe
-    // eventually separate ui into game lobby vs game in progress
-        
 
 }

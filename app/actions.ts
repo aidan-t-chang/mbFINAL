@@ -109,4 +109,29 @@ async function logout() {
     cookieStore.delete("sessionId");
 }
 
-export { createAccount, login, getCurrentUser, logout};
+async function getGameQuestions(roomId: string) {
+    return await prisma.question.findMany({
+        where: { gameId: roomId },
+        orderBy: { id: "asc" }
+    });
+}
+
+async function cleanUpQuestions(roomId: string, questionIndex: number) {
+    const allQuestions = await getGameQuestions(roomId);
+
+    const unusedQuestions = allQuestions.slice(questionIndex);
+    const unusedQuestionIds = unusedQuestions.map(q => q.id);
+
+    if (unusedQuestionIds.length > 0) {
+        try {
+            await prisma.question.deleteMany({
+                where: { id: { in: unusedQuestionIds } }
+            });
+            console.log(`Cleaned up ${unusedQuestionIds.length} questions for game ${roomId}`);
+        } catch (e) {
+            console.error("Error cleaning up questions:", e);
+        }
+    }
+}
+
+export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions};

@@ -55,6 +55,53 @@ async function generateAddition(roomId: string, numQuestions: number) {
     }
 }
 
+async function generateSubtraction(roomId: string, numQuestions: number) {
+    // create the math questions, the answers, and put them in the database
+    const newQuestions = [];
+    const uniqueQuestions = new Set<string>();
+
+    while (newQuestions.length < numQuestions) {
+        const num1 = Math.floor(Math.random() * 40) + 1; // 1-40
+        const num2 = Math.floor(Math.random() * 40) + 1; // 1-40
+
+        const questionText = `${num1} - ${num2}`;
+        const answer = (num1 - num2);
+
+        if (!uniqueQuestions.has(questionText)) {
+            uniqueQuestions.add(questionText);
+            newQuestions.push({
+                gameId: roomId,
+                question: questionText,
+                correctAnswer: answer
+            });
+        }
+    }
+
+    try {
+        await prisma.question.createMany({
+            data: newQuestions
+        });
+        console.log(`Created ${numQuestions} questions for game ${roomId}`);
+        return newQuestions;
+    } catch (e) {
+        console.error("Error creating questions:", e);
+        return null;
+    }
+}
+
+// generate both addition and subtraction questions for a game
+async function generateBoth(roomId: string, numQuestions: number) {
+    let counter: number = 0;
+    while (counter < numQuestions) {
+        if (Math.random() < 0.5) { // addition
+            const question = await generateAddition(roomId, 1);
+        } else {
+            const question = await generateSubtraction(roomId, 1);
+        }
+        counter++;
+    }
+}
+
 server.on('connection', socket => {
     let currentRoomId: string | null = null;
     let currentUser: any = null;
@@ -146,9 +193,8 @@ server.on('connection', socket => {
                 } catch (e) {
                     console.error("Error updating game status:", e);
                 }
-                // change later to send to server to change buttons to game start state
                 room.forEach((_, client) => {
-                    client.send(JSON.stringify({ type: "GAME_READY", message: "Game is starting!" }));
+                    client.send(JSON.stringify({ type: "GAME_READY", message: "Game is ready!" }));
                 })
             }
         } else if (data.type === "GAME_ACTION") {
@@ -165,6 +211,14 @@ server.on('connection', socket => {
                     rooms.delete(currentRoomId);
                 }
             }
+        } else if (data.type === "GAME_LOADING") {
+            // generate questions and put them in the database
+            if (currentRoomId) {
+                await generateBoth(currentRoomId, 100);
+            } else {
+                console.error("No current room ID found for GAME_LOADING action");
+            }
+
         }
     });
 
