@@ -76,24 +76,34 @@ export default function ActiveGame() {
     }, [user, questions, gameOver]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
+        const val = e.target.value.replace(/[^0-9-]/g, ""); // only allow numbers and negative
         setCurrentInput(val);
 
         const currentQuestion = questions[currentIndex];
+        if (!currentQuestion) return;
 
-        // check if current input is correct
-        if (currentQuestion && parseInt(val) === currentQuestion.answer) {
-            setCurrentInput("");
-            setCurrentIndex((prev) => prev + 1);
-            // implement combo scoring later
-            setMyScore(prev => prev + 1);
+        const expectedAnswerString = currentQuestion.answer.toString();
 
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: "GAME_ACTION",
-                    action: "CORRECT_ANSWER",
-                    user: { id: user.id, username: user.username }
-                }));
+        if (val.length >= expectedAnswerString.length) {
+
+            // check if current input is correct
+            if (currentQuestion && parseInt(val) === currentQuestion.answer) {
+                setCurrentInput("");
+                setCurrentIndex((prev) => prev + 1)
+                // implement combo scoring later and decide the scale of scoring (100, 1000, etc)
+                setMyScore(prev => prev + 1);
+
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        type: "GAME_ACTION",
+                        action: "CORRECT_ANSWER",
+                        user: { id: user.id, username: user.username }
+                    }));
+                }
+            } else {
+                // time penalty + combo reset to 0
+                console.log("wrong answer");
+                setCurrentInput("");
             }
         }
     };

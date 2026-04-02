@@ -7,6 +7,7 @@ import "./CustomLobby";
 import toast from "react-hot-toast";
 import "./game.css";
 import CustomLobby from "./CustomLobby";
+import ActiveGame from "./ActiveGame";
 
 export default function Game() {
     const { roomId } = useParams();
@@ -16,6 +17,7 @@ export default function Game() {
     const [players, setPlayers] = useState<{ id: string, username: string}[]>([]);
     const [isReady, setIsReady] = useState(false);
     const router = useRouter();
+    const [gameStarted, setGameStarted] = useState(false);
 
     const handleAnswer = (answer: string) => {
         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -29,8 +31,9 @@ export default function Game() {
 
     const handleStartGame = () => {
         console.log("strating game n stuff");
-        router.push(`/game/${roomId}/activegame`);
+        setGameStarted(true);
     }
+
 
     useEffect(() => {
         if (!user) return;
@@ -80,7 +83,11 @@ export default function Game() {
     }, [router]);
 
     if (!user) {
-        return null; // implement loading later
+        return <p>loading</p>; // implement loading later
+    }
+
+    if (gameStarted) {
+        return <ActiveGame />
     }
 
     return (
@@ -101,6 +108,4 @@ export default function Game() {
             </div>
         </>
     )
-    // set it later so that pressing enter submits the answer and add a submit button for mobile users maybe
-
 }
