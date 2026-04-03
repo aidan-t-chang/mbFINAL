@@ -19,6 +19,8 @@ export default function Game() {
     const router = useRouter();
     const [gameStarted, setGameStarted] = useState(false);
 
+    const isOwner = players.length > 0 && players[0].id === user?.id;
+
     const handleAnswer = (answer: string) => {
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({ 
@@ -30,8 +32,16 @@ export default function Game() {
     }
 
     const handleStartGame = () => {
-        console.log("strating game n stuff");
-        setGameStarted(true);
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                type: "GAME_ACTION",
+                action: "START_GAME"
+            }));
+
+            // start loading questions now
+            socket.send(JSON.stringify({ type: "GAME_LOADING" }));
+            setGameStarted(true);
+        }
     }
 
 
@@ -59,6 +69,9 @@ export default function Game() {
                 setIsReady(true);
             } else if (data.type === "GAME_ACTION") {
                 console.log("Game action received: ", data.action);
+                if (data.action === "START_GAME") {
+                    setGameStarted(true);
+                }
             }
         };
 
@@ -87,7 +100,7 @@ export default function Game() {
     }
 
     if (gameStarted) {
-        return <ActiveGame />
+        return <ActiveGame socket={socket} />
     }
 
     return (
@@ -104,7 +117,12 @@ export default function Game() {
                 </ul>
             </div>
             <div>
-                <button className="game-button" disabled={!isReady} onClick={handleStartGame}>Start Game</button>
+                <button 
+                className="game-button" 
+                disabled={!isReady || !isOwner} 
+                onClick={handleStartGame}>
+                    {isOwner ? "Start Game" : "Waiting for host..."}
+                    </button>
             </div>
         </>
     )

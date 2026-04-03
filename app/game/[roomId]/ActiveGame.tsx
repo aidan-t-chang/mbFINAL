@@ -5,12 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { getCurrentUser, getGameQuestions } from "../../actions";
 import toast from "react-hot-toast";
 
-export default function ActiveGame() {
+export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
     const { roomId } = useParams();
     const router = useRouter();
 
     const [user, setUser] = useState<any>(null);
-    const [socket, setSocket] = useState<WebSocket | null>(null);
     const [questions, setQuestions] = useState<any[]>([]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,35 +27,26 @@ export default function ActiveGame() {
             }
             setUser(currentUser);
 
-            const gameQuestions = await getGameQuestions(roomId as string);
-            setQuestions(gameQuestions);
+            if (socket) {
+                socket.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
 
-            const ws = new WebSocket("ws://localhost:8080");
-            ws.onopen = () => {
-                // join room again -> new url -- old connection got severed
-                ws.send(JSON.stringify({
-                    type: "JOIN_ROOM",
-                    roomId: roomId,
-                    user: { id: currentUser.id, username: currentUser.username}
-                }));
-
-                ws.send(JSON.stringify({ type: "GAME_LOADING" }))
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
-                    if (data.action === "CORRECT_ANSWER") {
-                        setOpponentScore((prev) => prev + 1);
+                    if (data.type === "QUESTIONS_READY") {
+                        const gameQuestions = await getGameQuestions(roomId as string);
+                        setQuestions(gameQuestions);
                     }
-                }
-            };
 
-            setSocket(ws);
-            return () => ws.close();
+                    if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
+                        if (data.action === "CORRECT_ANSWER") {
+                            // figure out what to scale score by
+                            setOpponentScore((prev) => prev + 1);
+                        }
+                    }
+                };
+            }
         }
         setUpGame();
-    }, [roomId, router]);
+    }, [roomId, router, socket]);
 
     useEffect(() => {
         if (!user || questions.length === 0 || gameOver) return;
@@ -82,12 +72,12 @@ export default function ActiveGame() {
         const currentQuestion = questions[currentIndex];
         if (!currentQuestion) return;
 
-        const expectedAnswerString = currentQuestion.answer.toString();
+        const expectedAnswerString = currentQuestion.correctAnswer.toString();
 
         if (val.length >= expectedAnswerString.length) {
 
             // check if current input is correct
-            if (currentQuestion && parseInt(val) === currentQuestion.answer) {
+            if (currentQuestion && parseInt(val) === currentQuestion.correctAnswer) {
                 setCurrentInput("");
                 setCurrentIndex((prev) => prev + 1)
                 // implement combo scoring later and decide the scale of scoring (100, 1000, etc)

@@ -215,6 +215,13 @@ server.on('connection', socket => {
             // generate questions and put them in the database
             if (currentRoomId) {
                 await generateBoth(currentRoomId, 100);
+
+                const room = rooms.get(currentRoomId)!;
+                room.forEach((_, client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ type: "QUESTIONS_READY" }));
+                    }
+                })
             } else {
                 console.error("No current room ID found for GAME_LOADING action");
             }
