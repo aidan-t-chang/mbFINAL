@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUser, getGameQuestions } from "../../actions";
+import { getCurrentUser, getGameQuestions, cleanUpQuestions, saveGameResults } from "../../actions";
 import toast from "react-hot-toast";
 
 export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
@@ -64,6 +64,18 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
 
         return () => clearInterval(timer);
     }, [user, questions, gameOver]);
+
+    useEffect(() => {
+        // clean up questions
+        if (gameOver) {
+            const isWinner = myScore > opponentScore;
+            saveGameResults(roomId as string, myScore, isWinner);
+
+            if (myScore >= opponentScore) {
+                cleanUpQuestions(roomId as string, currentIndex);
+            }
+        }
+    }, [gameOver, currentIndex, roomId, myScore, opponentScore]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value.replace(/[^0-9-]/g, ""); // only allow numbers and negative

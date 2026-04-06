@@ -134,4 +134,45 @@ async function cleanUpQuestions(roomId: string, questionIndex: number) {
     }
 }
 
-export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions};
+async function saveGameResults(roomId: string, score: number, isWinner: boolean) {
+    const user = await getCurrentUser();
+    if (!user) {
+        return;
+    }
+
+    try {
+        await prisma.gamePlayer.update({
+            where: {
+                userId_gameId: {
+                    userId: user.id,
+                    gameId: roomId
+                }
+            },
+            data: {
+                score: score,
+                isWinner: isWinner
+            }
+        });
+
+        await prisma.game.update({
+            where: {
+                id: roomId
+            },
+            data: {
+                status: "FINISHED"
+            }
+        });
+
+        await prisma.user.update({
+            where: { id: user.id },  
+            data: { totalExp: { increment: score }, gamesPlayed: { increment: 1 } } // change xp to someting else maybe
+        });
+
+        return { success: true };
+    } catch (e) {
+        console.error("Error saving game results:", e);
+        return { success: false, error: e };
+    }
+}
+
+export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults };
