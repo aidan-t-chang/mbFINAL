@@ -16,8 +16,13 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
     const [currentInput, setCurrentInput] = useState("");
     const [myScore, setMyScore] = useState(0);
     const [opponentScore, setOpponentScore] = useState(0);
+    const [opponentUsername, setOpponentUsername] = useState("");
+    const [opponentCombo, setOpponentCombo] = useState(0);
+    const [opponentComboLevel, setOpponentComboLevel] = useState(1);
     const [timeLeft, setTimeLeft] = useState(60);
     const [gameOver, setGameOver] = useState(false);
+    const [combo, setCombo] = useState(0);
+    const [comboLevel, setComboLevel] = useState(1);
 
     useEffect(() => {
         async function setUpGame() {
@@ -38,8 +43,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
 
                     if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
                         if (data.action === "CORRECT_ANSWER") {
-                            // figure out what to scale score by
-                            setOpponentScore((prev) => prev + 1);
+                            updateScore(true);
                         }
                     }
                 };
@@ -92,8 +96,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
             if (currentQuestion && parseInt(val) === currentQuestion.correctAnswer) {
                 setCurrentInput("");
                 setCurrentIndex((prev) => prev + 1)
-                // implement combo scoring later and decide the scale of scoring (100, 1000, etc)
-                setMyScore(prev => prev + 1);
+                updateScore(false);
 
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
@@ -109,6 +112,22 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
             }
         }
     };
+
+    const updateScore = (opp: boolean) => {
+        if (opp) {
+            setOpponentCombo((prev) => prev + 1);
+            if (opponentCombo % 3 === 0) {
+                setOpponentComboLevel((prev) => prev + 0.5);
+            }
+            setOpponentScore((prev) => prev + (1000 * opponentComboLevel));
+        } else {
+            setCombo((prev) => prev + 1);
+            if (combo % 3 === 0) {
+                setComboLevel((prev) => prev + 0.5);
+            }
+            setMyScore((prev) => prev + (1000 * comboLevel));
+        }
+    }
 
     if (!user || questions.length === 0) {
         return (<>
@@ -140,8 +159,12 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
                     {/* time left is probably going to be a progress bar*/}
                     <div className="score-board">
                         <p>{user.username}: {myScore}</p>
-                        <p>opponent: {opponentScore}</p>
+                        <p>{opponentUsername}: {opponentScore}</p>
                         {/* store opponent username too? + combo stuff*/}
+                    </div>
+                    <div className="other-info">
+                        <p>Time Left: {timeLeft}s</p>
+                        <p>Combo: {combo} (x{comboLevel.toFixed(1)})</p>
                     </div>
                 </div>
             </div>
