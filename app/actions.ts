@@ -98,7 +98,7 @@ async function getCurrentUser() {
 
     const user = await prisma.user.findUnique({
         where: { id: parsedId },
-        select: { id: true, email: true, username: true }
+        select: { id: true, email: true, username: true, mbrr: true }
     });
 
     return user;

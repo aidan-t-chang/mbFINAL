@@ -1,11 +1,87 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { prisma } from "./db/index.js";
 import { Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
 import "dotenv/config";
 
 const server = new WebSocketServer({ port: 8081 });
 
 const rooms = new Map<string, Map<WebSocket, any>>();
+
+interface QueuePlayer {
+    socket: WebSocket;
+    user: any;
+    mbrr: number;
+    joinedAt: number;
+}
+
+let matchmakingQueue: QueuePlayer[] = [];
+
+// matchmaking
+setInterval(() => {
+    if (matchmakingQueue.length < 2) {
+        return;
+    }
+
+    const now = Date.now();
+    let i = 0;
+
+    while (i < matchmakingQueue.length) {
+        const p1 = matchmakingQueue[i];
+
+        if (!p1) {
+            i++;
+            continue;
+        }
+
+        const secondsWaiting = Math.floor((now - p1.joinedAt) / 1000);
+
+        const acceptableRange = 50 + (secondsWaiting * 10);
+
+        let matchFoundIndex = -1;
+
+        for (let j = i + 1; j < matchmakingQueue.length; j++) {
+            const p2 = matchmakingQueue[j];
+
+            if (!p2) continue;
+
+            const p2SecondsWaiting = Math.floor((now - p2.joinedAt) / 1000);
+            const p2AcceptableRange = 50 + (p2SecondsWaiting * 10);
+
+            const actualDiff = Math.abs(p1.mbrr - p2.mbrr);
+
+            if (actualDiff <= acceptableRange && actualDiff <= p2AcceptableRange) {
+                matchFoundIndex = j;
+                break;
+            }
+        }
+
+        if (matchFoundIndex !== -1) {
+            const p2 = matchmakingQueue[matchFoundIndex];
+            if (!p2) {
+                i++;
+                continue;
+            }
+
+            matchmakingQueue.splice(matchFoundIndex, 1);
+            matchmakingQueue.splice(i, 1);
+
+            const matchRoomId = randomUUID();
+            const payload = JSON.stringify({
+                type: "MATCH_FOUND", roomId: matchRoomId
+            });
+
+            if (p1.socket.readyState === WebSocket.OPEN) {
+                p1.socket.send(payload);
+            }
+            if (p2.socket.readyState === WebSocket.OPEN) {
+                p2.socket.send(payload);
+            }
+        } else {
+            i++;
+        }
+    }
+}, 2000);
 
 function getRoomUpdate(roomId: string) {
     const room = rooms.get(roomId);
@@ -225,11 +301,31 @@ server.on('connection', socket => {
             } else {
                 console.error("No current room ID found for GAME_LOADING action");
             }
+        } else if (data.type === "FIND_MATCH") {
+            const user = data.user;
+            const mbrr = data.mbrr;
 
+            if (!matchmakingQueue.find(p => p.user.id === user.id)) {
+                matchmakingQueue.push({
+                    socket,
+                    user,
+                    mbrr,
+                    joinedAt: Date.now()
+                });
+                console.log(`User ${user.username} added to matchmaking queue with MBRR ${mbrr}`);
+            }
+            return;
+        }
+
+        if (data.type === "CANCEL_MATCH") {
+            const user = data.user;
+            matchmakingQueue = matchmakingQueue.filter(p => p.user.id !== user.id);
+            return;
         }
     });
 
     socket.on('close', () => {
+        matchmakingQueue = matchmakingQueue.filter(p => p.socket !== socket);
         if (currentRoomId && rooms.has(currentRoomId)) {
             const room = rooms.get(currentRoomId)!;
             room.delete(socket);

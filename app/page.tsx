@@ -84,6 +84,9 @@ function Home() {
         <Link href={`/game/${roomId}`}>create new game</Link>
       </div>
       <div>
+        <Link href="/match">play the game</Link>
+      </div>
+      <div>
         <input 
           type="text"
           placeholder="room id"
