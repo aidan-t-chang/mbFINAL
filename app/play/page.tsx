@@ -3,16 +3,26 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../actions";
+import Link from "next/link";
 
+const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 export default function FindMatchPage() {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [joinRoomId, setJoinRoomId] = useState("");
+    const [roomId, setRoomId] = useState("");
+
+    const handleJoinRoom = () => {
+        if (joinRoomId.trim()) {
+        router.push(`/game/${joinRoomId.trim()}`); 
+        }
+    };
 
     useEffect(() => {
-        async function fetchuser() {
+        async function fetchUser() {
             const u = await getCurrentUser();
             if (!u) {
                 router.push("/login");
@@ -20,7 +30,7 @@ export default function FindMatchPage() {
             }
             setUser(u);
         }
-        fetchuser();
+        fetchUser();
     }, [router]);
 
     useEffect(() => {
@@ -75,10 +85,27 @@ export default function FindMatchPage() {
 
     return (
         <div className="find-match-page">
-            <h1>Competitive</h1>
+            <h1>competitive</h1>
             <div>
                 <p>{user.username}</p>
                 <p>{user.rank} ({user.mbrr})</p>
+            </div>
+            {/* add other gamemodes later */}
+            <div>
+                <h1>custom game</h1>
+                <div>
+                    <Link href={`/game/${roomId}`}>create new game</Link>
+                </div>
+                <div>
+                    <input 
+                    type="text"
+                    placeholder="room id"
+                    value={joinRoomId}
+                    onChange={(e) => setJoinRoomId(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
+                    />
+                    <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
+                </div>
             </div>
 
             { isSearching ? (

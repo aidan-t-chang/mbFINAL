@@ -7,22 +7,11 @@ import "./home.css";
 import { getCurrentUser, logout } from "./actions";
 import toast from "react-hot-toast";
 
-const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 function Home() {
   const router = useRouter();
-
-  const [messages, setMessages] = useState<string[]>([]);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [roomId, setRoomId] = useState("");
-  const [joinRoomId, setJoinRoomId] = useState("");
   const [user, setUser] = useState<any>(null);
 
-  const handleJoinRoom = () => {
-    if (joinRoomId.trim()) {
-      router.push(`/game/${joinRoomId.trim()}`); 
-    }
-  };
-
+  
   useEffect(() => {
     async function fetchUser() {
       const loggedInUser = await getCurrentUser();
@@ -33,22 +22,6 @@ function Home() {
     }
     fetchUser();
   }, [router]);
-
-  useEffect(() => {  
-    setRoomId(generateRoomId());
-    const ws = new WebSocket("ws://localhost:8081");
-
-    ws.onmessage = ({ data }) => {
-      console.log("message from server: ", data);
-      setMessages((prev) => [...prev, data]);
-    };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, []);
 
   const handleLogout = async () => {
     setUser(null);
@@ -64,40 +37,53 @@ function Home() {
   return (
     <div className="home-container">
       <div>
-        <h1>Messages</h1>
-        <ul>
-          {messages.map((msg, i) => (
-            <li key={i}>{msg}</li>
-          ))}
-        </ul>
-        <button onClick={() => socket?.send("hello")}>Send messages</button>
-      </div>
-      <div>
-        {user ? (<p>hello {user.username}</p>) : 
+        {user ? (<><p>hello {user.username}</p>
+          <div>
+          <Link href="/play">play</Link><br></br>
+          <Link href="/friends">friends</Link><br></br>
+          <Link href="/leaderboard">leaderboard</Link><br></br>
+          <Link href="/profile">profile</Link><br></br>
+          <Link href="/settings">settings</Link><br></br>
+          {user && (
+            <button onClick={handleLogout}>log out</button>
+          )}
+        </div></>) : 
           <Link href="/login">create account</Link>
         }
       </div>
-      {user && (
-        <button onClick={handleLogout}>log out</button>
-      )}
-      <div>
-        <Link href={`/game/${roomId}`}>create new game</Link>
-      </div>
-      <div>
-        <Link href="/match">play the game</Link>
-      </div>
-      <div>
-        <input 
-          type="text"
-          placeholder="room id"
-          value={joinRoomId}
-          onChange={(e) => setJoinRoomId(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
-        />
-        <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
-      </div>
+
     </div>
   )
 }
 
 export default Home;
+
+/*
+navigation links:
+
+home page:
+  - play
+  - friends
+  - leaderboard
+  - settings
+  - profile
+  - logout
+
+play page:
+  - casual
+  - competitive (0/10 placement matches)
+  - training
+
+friends page:
+  - search for users
+
+leaderboard page:
+  - click each user on leaderboard -> see profile
+  - global, friends-only
+
+settings page:
+  - no other links
+
+profile page:
+  - click on each friend -> see profile
+*/
