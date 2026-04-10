@@ -17,7 +17,7 @@ datasource db {
 model User {
   id                   Int          @id @default(autoincrement()) 
   email                String       @unique
-  username             String
+  username             String       @unique
   password             String 
   salt                 String
   createdAt            DateTime     @default(now())
@@ -26,8 +26,11 @@ model User {
   level                Int          @default(0)
   rank                 String       @default("Unranked")
   gamesPlayed          Int          @default(0)
-  timePlayed           Float        @default(0.0)
-  followers            Int          @default(0)
+  wins                 Int          @default(0)
+  losses               Int          @default(0)
+  avgAnswerTime        Float        @default(0.0)
+  timePlayed           Float        @default(0.0) // in hours?
+  friends              Int          @default(0)
   mbrr                 Int          @default(1000) // mathblitz rank rating
   
   friendshipsInitiated Friendship[] @relation("UserFriendships")
