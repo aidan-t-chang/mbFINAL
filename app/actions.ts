@@ -99,7 +99,6 @@ async function getCurrentUser() {
     const user = await prisma.user.findUnique({
         where: { id: parsedId },
         select: { id: true, 
-            email: true, 
             username: true, 
             mbrr: true, 
             createdAt: true,
@@ -193,7 +192,21 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean)
 async function getUserByUsername(username: string) {
     return await prisma.user.findUnique({
         where: { username },
-        select: { id: true, username: true }
+        select: { id: true, 
+            username: true, 
+            mbrr: true, 
+            createdAt: true,
+            totalExp: true,
+            gamesPlayed: true,
+            timePlayed: true,
+            lastOnline: true,
+            level: true,
+            rank: true,
+            wins: true,
+            losses: true,
+            avgAnswerTime: true,
+            friends: true,
+        }
     })
 }
 
