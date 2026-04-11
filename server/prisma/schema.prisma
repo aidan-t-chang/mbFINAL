@@ -37,6 +37,8 @@ model User {
   friendshipsReceived  Friendship[] @relation("FriendFriendships")
 
   gameHistory          GamePlayer[]
+  
+  notifications        Notification[]
 } 
 
 model Friendship {
@@ -91,4 +93,15 @@ model Question {
   game          Game     @relation(fields: [gameId], references: [id])
   question      String   // "2+2" 
   correctAnswer Int      // 4
+}
+
+model Notification {
+  id            Int         @id @default(autoincrement())
+  userId        Int         // user receiving the notification
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String      // friend request, system, achievement
+  message       String
+  link          String?     // optional
+  isRead        Boolean     @default(false)
+  createdAt     DateTime    @default(now())
 }

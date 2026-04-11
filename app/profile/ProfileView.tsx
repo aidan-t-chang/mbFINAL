@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../actions";
+import { getCurrentUser, sendFriendRequest } from "../actions";
 import toast from "react-hot-toast";
 
 export default function ProfileView({ profileUser, isOwnProfile, currentUserFriends, profileFriends }: { profileUser: any, isOwnProfile: boolean, currentUserFriends: any[], profileFriends: any[] }) {
     const winLossRatio = profileUser.wins + profileUser.losses > 0 ? (profileUser.wins / (profileUser.wins + profileUser.losses)).toFixed(2) : "N/A";
     const winrate = profileUser.wins / (profileUser.wins + profileUser.losses) * 100;
+
+    const handleAddFriend = async () => {
+        const result = await sendFriendRequest(profileUser.id);
+        if (result.success) {
+            toast.success(`friend request sent to ${profileUser.username}`);
+        } else {
+            toast.error(result.error);
+        }
+    };
+
     return (
         <div>
             <h1>{profileUser.username}'s Profile</h1><br></br>
@@ -46,7 +56,7 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
 
             {isOwnProfile ? (
                 <button>Edit Profile</button>
-            ) : <button>Add Friend</button>}
+            ) : <button onClick={handleAddFriend}>Add Friend</button>}
         </div>
     )
 }

@@ -210,5 +210,95 @@ async function getUserByUsername(username: string) {
     })
 }
 
+async function sendFriendRequest(targetUserId: number) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        return { success: false, error: "Not logged in" };
+    }
 
-export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername };
+    if (currentUser.id === targetUserId) {
+        return { success: false, error: "Cannot send friend request to yourself" };
+    }
+
+    try {
+        await prisma.friendship.create({
+            data: {
+                userId: currentUser.id,
+                friendId: targetUserId,
+                status: "PENDING"
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                userId: targetUserId,
+                type: "FRIEND_REQUEST",
+                message: `${currentUser.username} has sent you a friend request`,
+                link: `/profile/${currentUser.username}`
+            }
+        });
+
+        return { success: true };
+    } catch (e: any) {
+        if (e.code === "P2002") {
+            return { success: false, error: "Friend request already sent" };
+        }
+        return { success: false, error: e };
+    }
+}
+
+export async function getPendingFriendRequests() {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        return { success: false, error: "Not logged in" };
+    }
+
+    try {
+        const requests = await prisma.friendship.findMany({
+            where: {
+                friendId: currentUser?.id,
+                status: "PENDING"
+            },
+            include: {
+                user: {
+                    select: { id: true, username: true, mbrr: true }
+                }
+            }
+        });
+        return { success: true, requests };
+    } catch (e) {
+        console.error("Error fetching friend requests:", e);
+        return { success: false, error: "Error fetching friend requests" };
+    }
+}
+
+export async function getFriends() {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        return { success: false, error: "Not logged in" };
+    }
+
+    try {
+        const friends = await prisma.friendship.findMany({
+            where: {
+                OR: [
+                    { userId: currentUser.id, status: "ACCEPTED" },
+                    { friendId: currentUser.id, status: "ACCEPTED" }
+                ]
+            },
+            include: {
+                user: {
+                    select: { id: true, username: true, mbrr: true }
+                },
+                friend: {
+                    select: { id: true, username: true, mbrr: true }
+                }
+            }
+        })
+        return { success: true, friends }
+    } catch (e) {
+        console.error("Error fetching friends:", e);
+        return { success: false, error: "Error fetching friends" };
+    }
+}
+export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };
