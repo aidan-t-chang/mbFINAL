@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import "./home.css";
-import { getCurrentUser, logout } from "./actions";
+import { getCurrentUser, logout, updateLastOnline } from "./actions";
 import toast from "react-hot-toast";
 
 function Home() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
-  
   useEffect(() => {
     async function fetchUser() {
       const loggedInUser = await getCurrentUser();

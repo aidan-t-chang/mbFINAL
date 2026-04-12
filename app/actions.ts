@@ -76,6 +76,11 @@ async function login(formData: FormData) {
             maxAge: 60 * 60 * 24 * 30, // 1 month
         });
 
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { lastOnline: new Date() }
+        });
+
         return { success: true, user: { id: user.id, email: user.email, username: user.username } };
     } catch (error: any) {
         return { success: false, error: error };
@@ -299,6 +304,55 @@ export async function getFriends() {
     } catch (e) {
         console.error("Error fetching friends:", e);
         return { success: false, error: "Error fetching friends" };
+    }
+}
+
+export async function getFriendsByUserId(userId: number) {
+    try {
+        const friends = await prisma.friendship.findMany({
+            where: {
+                OR: [
+                    { userId: userId, status: "ACCEPTED" },
+                    { friendId: userId, status: "ACCEPTED" }
+                ]
+            },
+            include: {
+                user: { select: { id: true, username: true, mbrr: true } },
+                friend: { select: { id: true, username: true, mbrr: true } }
+            }
+        });
+        return { success: true, friends };
+    } catch (e) {
+        console.error("Error fetching friends by user ID:", e);
+        return { success: false, error: "Error fetching friends by user ID" };
+    }
+}
+
+export async function updateLastOnline() {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        return;
+    }
+    await prisma.user.update({
+        where: { id: currentUser.id },
+        data: { lastOnline: new Date() }
+    })
+}
+
+export async function acceptFriendRequest(userId: number, friendId: number) {
+    try {
+        await prisma.friendship.update({
+            where: {
+                userId_friendId: {
+                    userId,
+                    friendId
+                }
+            },
+            data: { status: "ACCEPTED" }
+        })
+    }
+    catch (e) {
+        console.error("Error accepting friend request:", e);
     }
 }
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };

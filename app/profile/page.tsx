@@ -1,14 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../actions";
+import { getCurrentUser, getFriends } from "../actions";
 import ProfileView from "./ProfileView";
 
 export default function Profile() {
     const [user, setUser] = useState<any>(null);
+    const [userFriends, setUserFriends] = useState<any[]>([]);
 
     useEffect(() => {
         getCurrentUser().then(setUser);
+        getFriends().then(result => {
+            if (result.success) {
+                setUserFriends(result.friends || []);
+            } else {
+                setUserFriends([]);
+            }
+        });
     }, []);
 
     if (!user) {
@@ -16,5 +24,5 @@ export default function Profile() {
     }
 
     // get currentuserfriends and profilefriends in the future
-    return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={[]} profileFriends={[]} />;
+    return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} />;
 }

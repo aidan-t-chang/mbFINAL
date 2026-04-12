@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getCurrentUser, sendFriendRequest } from "../actions";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 export default function ProfileView({ profileUser, isOwnProfile, currentUserFriends, profileFriends }: { profileUser: any, isOwnProfile: boolean, currentUserFriends: any[], profileFriends: any[] }) {
     const winLossRatio = profileUser.wins + profileUser.losses > 0 ? (profileUser.wins / (profileUser.wins + profileUser.losses)).toFixed(2) : "N/A";
@@ -34,9 +35,15 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
                         <p>You have no friends yet. Find some friends to play with!</p>
                     ) : (
                         <ul>
-                            {currentUserFriends.map((friend) => (
-                                <li key={friend.id}>{friend.username}</li>
-                            ))}
+                            {currentUserFriends.map((friend) => { 
+                                const isSender = friend.userId === profileUser.id;
+                                const actualFriend = isSender ? friend.friend : friend.user;
+                                return (
+                                    <Link href={`/profile/${actualFriend.username}`} key={friend.id}>
+                                        {actualFriend.username}
+                                    </Link>
+                                );
+                            })}
                         </ul>
                     )}
                 </div>
@@ -46,9 +53,15 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
                     <p>{profileUser.username} has no friends yet.</p>
                 ) : (
                     <ul>
-                        {profileFriends.map((friend) => (
-                            <li key={friend.id}>{friend.username}</li>
-                        ))}
+                        {profileFriends.map((friend) => {
+                            const isSender = friend.userId === profileUser.id;
+                            const actualFriend = isSender ? friend.friend : friend.user;
+                            return (
+                                <Link href={`/profile/${actualFriend.username}`} key={friend.id}>
+                                    {actualFriend.username}
+                                </Link>
+                            );
+                        })}
                     </ul>
                 )}
                 </div>
