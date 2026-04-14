@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getCurrentUser } from "../../actions";
 import "./CustomLobby";
 import toast from "react-hot-toast";
@@ -11,6 +11,8 @@ import ActiveGame from "./ActiveGame";
 
 export default function Game() {
     const { roomId } = useParams();
+    const searchParams = useSearchParams();
+    const isMatchmaking = searchParams.get("matchmaking") === "true";
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [user, setUser] = useState<any>(null);
     const [answer, setAnswer] = useState<string | null>(null);
@@ -44,6 +46,11 @@ export default function Game() {
         }
     }
 
+    useEffect(() => {
+        if (isReady && isMatchmaking && isOwner) {
+            handleStartGame();
+        }
+    }, [isReady, isMatchmaking, isOwner, socket]);
 
     useEffect(() => {
         if (!user) return;

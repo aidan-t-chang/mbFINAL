@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getCurrentUser, getGameQuestions, cleanUpQuestions, saveGameResults } from "../../actions";
 import toast from "react-hot-toast";
 
-export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
+export default function ActiveGame({ socket }: { socket: WebSocket | null }, isCustomLobby?: boolean) {
     const { roomId } = useParams();
     const router = useRouter();
 
@@ -91,7 +91,6 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }) {
         const expectedAnswerString = currentQuestion.correctAnswer.toString();
 
         if (val.length >= expectedAnswerString.length) {
-
             // check if current input is correct
             if (currentQuestion && parseInt(val) === currentQuestion.correctAnswer) {
                 setCurrentInput("");

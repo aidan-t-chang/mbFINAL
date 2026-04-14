@@ -11,4 +11,3 @@ API Framework, Express.js, Lightweight and flexible; used for simple tasks like 
 Real-Time Server, Socket.io, Manages the ""rooms"" where two players compete and ensures the ""handshake"" stays alive.
 Database (SQL), PostgreSQL, The ""source of truth"" for user accounts, Elo ratings, and lifetime statistics.
 Cache (NoSQL), Redis, Essential for the Global Leaderboard. It calculates rankings in memory so they update in real-time.
-Validation, Zod, Ensures that the ""answers"" sent by the player are formatted correctly before the server checks them.

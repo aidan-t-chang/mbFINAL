@@ -60,7 +60,7 @@ export default function FindMatchPage() {
             const data = JSON.parse(event.data);
             if (data.type === "MATCH_FOUND") {
                 ws.close();
-                router.push(`/game/${data.roomId}`);
+                router.push(`/game/${data.roomId}?matchmaking=true`);
             }
         };
 
@@ -88,7 +88,7 @@ export default function FindMatchPage() {
             <h1>competitive</h1>
             <div>
                 <p>{user.username}</p>
-                <p>{user.rank} ({user.mbrr})</p>
+                <p>{user.rank} ({user.mbrr} mbrr)</p>
             </div>
             {/* add other gamemodes later */}
             <div>

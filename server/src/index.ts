@@ -292,15 +292,19 @@ server.on('connection', socket => {
             if (currentRoomId) {
                 await generateBoth(currentRoomId, 100);
 
-                const room = rooms.get(currentRoomId)!;
-                room.forEach((_, client) => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({ type: "QUESTIONS_READY" }));
-                    }
-                })
+                const room = rooms.get(currentRoomId);
+                if (room) {
+                    room.forEach((_, client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify({ type: "QUESTIONS_READY" }));
+                        }
+                    });
+                }
             } else {
                 console.error("No current room ID found for GAME_LOADING action");
             }
+            // make scoring time based as well
+            // also fix combo scoring on both ends
         } else if (data.type === "FIND_MATCH") {
             const user = data.user;
             const mbrr = data.mbrr;
