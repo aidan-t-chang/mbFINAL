@@ -23,6 +23,5 @@ export default function Profile() {
         return <p>Loading...</p>;
     }
 
-    // get currentuserfriends and profilefriends in the future
     return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} />;
 }

@@ -137,8 +137,8 @@ async function generateSubtraction(roomId: string, numQuestions: number) {
     const uniqueQuestions = new Set<string>();
 
     while (newQuestions.length < numQuestions) {
-        const num1 = Math.floor(Math.random() * 40) + 1; // 1-40
-        const num2 = Math.floor(Math.random() * 40) + 1; // 1-40
+        const num1 = Math.floor(Math.random() * 20) + 1; // 1-20
+        const num2 = Math.floor(Math.random() * 20) + 1; // 1-20
 
         const questionText = `${num1} - ${num2}`;
         const answer = (num1 - num2);

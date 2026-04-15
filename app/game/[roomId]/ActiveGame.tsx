@@ -3,7 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getCurrentUser, getGameQuestions, cleanUpQuestions, saveGameResults } from "../../actions";
+import Link from "next/link";
 import toast from "react-hot-toast";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function ActiveGame({ socket }: { socket: WebSocket | null }, isCustomLobby?: boolean) {
     const { roomId } = useParams();
@@ -23,7 +25,12 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     const [gameOver, setGameOver] = useState(false);
     const [combo, setCombo] = useState(0);
     const [comboLevel, setComboLevel] = useState(1);
+    const [maxCombo, setMaxCombo] = useState(0);
     const [isInputDisabled, setIsInputDisabled] = useState(false);
+
+    const [scoreHistory, setScoreHistory] = useState<{ time: number, myScore: number, opponentScore: number }[]>([
+        { time: 60, myScore: 0, opponentScore: 0 }
+    ]);
 
     const questionStartTime = useRef<number>(Date.now());
 
@@ -49,6 +56,9 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     }
 
                     if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
+                        if (!opponentUsername) {
+                            setOpponentUsername(data.user.username);
+                        }
                         if (data.action === "CORRECT_ANSWER") {
                             if (data.score !== undefined) {
                                 setOpponentScore(data.score);
@@ -93,8 +103,16 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
             if (myScore >= opponentScore) {
                 cleanUpQuestions(roomId as string, currentIndex);
             }
+
+            setScoreHistory(prev => [...prev, { time: 0, myScore, opponentScore }]);
         }
     }, [gameOver, currentIndex, roomId, myScore, opponentScore]);
+
+    useEffect(() => {
+        if (myScore > 0 || opponentScore > 0) {
+            setScoreHistory(prev => [...prev, { time: timeLeft, myScore, opponentScore}]);
+        }
+    }, [myScore, opponentScore]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value.replace(/[^0-9-]/g, ""); // only allow numbers and negative
@@ -120,13 +138,14 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
 
                 const newCombo = combo + 1;
                 const newComboLevel = (newCombo % 3 === 0) ? comboLevel + 0.5 : comboLevel;
-                const newScore = myScore + (baseScore * newComboLevel);
+                const newScore = myScore + Math.round((baseScore * newComboLevel));
 
                 setCurrentInput("");
                 setCurrentIndex((prev) => prev + 1);
                 setCombo(newCombo)
                 setComboLevel(newComboLevel);
                 setMyScore(newScore);
+                setMaxCombo((prev) => Math.max(prev, newCombo));
                 
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
@@ -153,22 +172,6 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         }
     };
 
-    const updateScore = (opp: boolean) => {
-        if (opp) {
-            setOpponentCombo((prev) => prev + 1);
-            if (opponentCombo % 3 === 0) {
-                setOpponentComboLevel((prev) => prev + 0.5);
-            }
-            setOpponentScore((prev) => prev + (1000 * opponentComboLevel));
-        } else {
-            setCombo((prev) => prev + 1);
-            if (combo % 3 === 0) {
-                setComboLevel((prev) => prev + 0.5);
-            }
-            setMyScore((prev) => prev + (1000 * comboLevel));
-        }
-    }
-
     if (!user || questions.length === 0) {
         return (<>
             <div className="flex flex-col items-center justify-center h-screen">
@@ -179,14 +182,29 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
 
     if (gameOver) {
         return (
-            <div className="game-over-screen">
+            <div className="game-over-screen text-center">
                 <h1 className="text-4xl font-bold mb-6">Game Over</h1>
                 <p>your score: {myScore}</p>
                 <p>opponent score: {opponentScore}</p>
                 {myScore > opponentScore && <p className="text-green-500">you win</p>}
                 {myScore < opponentScore && <p className="text-red-500">you lose</p>}
-                {/* show other things, like highest combo, score, # questions answered, graph of points? */}
-                {/* add "return to lobby" button, automatically save to DB after game finishes? */}
+                <p>you answered {currentIndex} questions</p>
+                <p>max combo: {maxCombo}</p>
+                <Link href="/">Return to Lobby</Link>
+                {/* eventually show mbrr increase after implementation of glicko2 rating*/}
+                <div className="graph-container">
+                    <h3 className="text-center">score history</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={scoreHistory}>
+                            <XAxis dataKey="time" type="number" domain={([0, 60])} reversed={true} />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line type="stepAfter" dataKey="myScore" stroke="#8884d8" dot={false} isAnimationActive={true} name={user.username}/>
+                            <Line type="stepAfter" dataKey="opponentScore" stroke="#82ca9d" dot={false} isAnimationActive={true} name={opponentUsername || "Opponent"}/>
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         )
     }
@@ -200,7 +218,6 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     <div className="score-board">
                         <p>{user.username}: {myScore}</p>
                         <p>{opponentUsername}: {opponentScore}</p>
-                        {/* store opponent username too? + combo stuff*/}
                     </div>
                     <div className="other-info">
                         <p>Time Left: {timeLeft}s</p>

@@ -29,6 +29,7 @@ export default function FindMatchPage() {
                 return;
             }
             setUser(u);
+            setRoomId(generateRoomId());
         }
         fetchUser();
     }, [router]);

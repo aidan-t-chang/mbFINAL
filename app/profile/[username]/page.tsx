@@ -47,6 +47,5 @@ export default function OtherProfile() {
 
     const isOwnProfile = currentUser?.id === profileUser.id;
 
-    // get currentuserfriends and profilefriends in the future
     return <ProfileView profileUser={profileUser} isOwnProfile={isOwnProfile} currentUserFriends={currentUserFriends} profileFriends={profileFriends} />;
 }
