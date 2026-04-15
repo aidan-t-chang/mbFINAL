@@ -355,4 +355,33 @@ export async function acceptFriendRequest(userId: number, friendId: number) {
         console.error("Error accepting friend request:", e);
     }
 }
+
+export async function searchUsers(searchTerm: string) {
+    if (!searchTerm || searchTerm.length < 3) {
+        return { success: true, users: [] };
+    }
+
+    try {
+        const users = await prisma.user.findMany({
+            where: {
+                username: {
+                    startsWith: searchTerm,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                id: true,
+                username: true,
+                mbrr: true,
+                createdAt: true,
+                timePlayed: true,
+            },
+            take: 10
+        });
+        return { success: true, users };
+    } catch (e) {
+        console.error("Error searching users:", e);
+        return { success: false, error: "Error searching users" };
+    }
+}
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };

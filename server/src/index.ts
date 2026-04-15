@@ -303,8 +303,7 @@ server.on('connection', socket => {
             } else {
                 console.error("No current room ID found for GAME_LOADING action");
             }
-            // make scoring time based as well
-            // also fix combo scoring on both ends
+
         } else if (data.type === "FIND_MATCH") {
             const user = data.user;
             const mbrr = data.mbrr;

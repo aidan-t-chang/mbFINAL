@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentUser, getPendingFriendRequests, getFriends, acceptFriendRequest } from "../actions";
+import { getCurrentUser, getPendingFriendRequests, getFriends, acceptFriendRequest, searchUsers } from "../actions";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -9,10 +9,33 @@ export default function Friends() {
     const [friendRequests, setFriendRequests] = useState<any[]>([]);
     const [friends, setFriends] = useState<any[]>([]);
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [inputValue, setInputValue] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
 
     useEffect(() => {
         getCurrentUser().then(setCurrentUser);
     }, []);
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(async () => {
+            if (inputValue.length >= 3) {
+                setSearchTerm(inputValue);
+
+                const result = await searchUsers(inputValue);
+                if (result && result.success) {
+                    setSearchResults(result.users || []);
+                } else {
+                    setSearchResults([]);
+                }
+            } else if (inputValue.length === 0) {
+                setSearchTerm("");
+                setSearchResults([]);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounce);
+    }, [inputValue]);
 
     useEffect(() => {
         const fetchFriendRequests = async () => {
@@ -61,6 +84,19 @@ export default function Friends() {
     return (
         <div>
             <p>hello this is the friends page</p><br></br>
+            <p>Search for friends:</p>
+            <input type="text" placeholder="Search by username..." value={inputValue} onChange={(e) => setInputValue(e.target.value)}/>
+            {searchResults.length > 0 && (
+                <div style={{ border: "1px solid #ccc", padding: "10px", marginTop: "5px" }}>
+                    <ul>
+                        {searchResults.map((user) => (
+                            <li key={user.id}>
+                                <Link href={`/profile/${user.username}`}>{user.username}</Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <h2>Pending Friend Requests</h2>
             {friendRequests.length === 0 ? (
                 <p>You have no pending friend requests.</p>

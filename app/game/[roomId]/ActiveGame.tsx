@@ -23,6 +23,13 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     const [gameOver, setGameOver] = useState(false);
     const [combo, setCombo] = useState(0);
     const [comboLevel, setComboLevel] = useState(1);
+    const [isInputDisabled, setIsInputDisabled] = useState(false);
+
+    const questionStartTime = useRef<number>(Date.now());
+
+    useEffect(() => {
+        questionStartTime.current = Date.now();
+    }, [currentIndex]);
 
     useEffect(() => {
         async function setUpGame() {
@@ -43,7 +50,15 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
 
                     if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
                         if (data.action === "CORRECT_ANSWER") {
-                            updateScore(true);
+                            if (data.score !== undefined) {
+                                setOpponentScore(data.score);
+                            }
+                            if (data.combo !== undefined) {
+                                setOpponentCombo(data.combo);
+                            } 
+                            if (data.comboLevel !== undefined) {
+                                setOpponentComboLevel(data.comboLevel);
+                            }
                         }
                     }
                 };
@@ -93,14 +108,33 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         if (val.length >= expectedAnswerString.length) {
             // check if current input is correct
             if (currentQuestion && parseInt(val) === currentQuestion.correctAnswer) {
-                setCurrentInput("");
-                setCurrentIndex((prev) => prev + 1)
-                updateScore(false);
 
+                const elapsedMs = Date.now() - questionStartTime.current;
+                
+                let baseScore = 1000;
+                if (elapsedMs > 500) {
+                    baseScore -= Math.floor((elapsedMs - 500) * 0.05); // after 500 ms, lose 1 point every 20 ms
+                }
+
+                baseScore = Math.max(50, baseScore);
+
+                const newCombo = combo + 1;
+                const newComboLevel = (newCombo % 3 === 0) ? comboLevel + 0.5 : comboLevel;
+                const newScore = myScore + (baseScore * newComboLevel);
+
+                setCurrentInput("");
+                setCurrentIndex((prev) => prev + 1);
+                setCombo(newCombo)
+                setComboLevel(newComboLevel);
+                setMyScore(newScore);
+                
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
                         type: "GAME_ACTION",
                         action: "CORRECT_ANSWER",
+                        score: newScore,
+                        combo: newCombo,
+                        comboLevel: newComboLevel,
                         user: { id: user.id, username: user.username }
                     }));
                 }
@@ -108,6 +142,13 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                 // time penalty + combo reset to 0
                 console.log("wrong answer");
                 setCurrentInput("");
+                setCombo(0);
+                setComboLevel(1);
+
+                setIsInputDisabled(true);
+                setTimeout(() => {
+                    setIsInputDisabled(false);
+                }, 1500);
             }
         }
     };
@@ -176,6 +217,9 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     onChange={handleInputChange}
                     autoFocus
                     className="answer-input"
+                    style={{ opacity: isInputDisabled ? 0.5 : 1,
+                        backgroundColor: isInputDisabled ? "#f8d7da" : "white",
+                    }}
                 />
             </div>
         </>
