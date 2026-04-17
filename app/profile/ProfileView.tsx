@@ -19,7 +19,7 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
     };
 
     return (
-        <div>
+        <div className="profile-view flex flex-col items-center justify-center h-screen text-center">
             <h1>{profileUser.username}'s Profile</h1><br></br>
             <p>{profileUser.friends} friends</p>
             <p>{profileUser.timePlayed} hours</p><br></br>
@@ -70,6 +70,7 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
             {isOwnProfile ? (
                 <button>Edit Profile</button>
             ) : <button onClick={handleAddFriend}>Add Friend</button>}
+            <Link href="/">Back</Link>
         </div>
     )
 }

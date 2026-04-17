@@ -221,6 +221,9 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     </div>
                     <div className="other-info">
                         <p>Time Left: {timeLeft}s</p>
+                        <div className="w-full bg-gray-200 h-3 mt-1 mb-2 rounded-full overflow-hidden">
+                            <div className="bg-green-500 h-3 rounded-full transition-all duration-1000 ease-linear" style={{ width: `${(timeLeft / 60) * 100}%` }}></div>
+                        </div>
                         <p>Combo: {combo} (x{comboLevel.toFixed(1)})</p>
                     </div>
                 </div>

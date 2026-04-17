@@ -82,10 +82,10 @@ export default function FindMatchPage() {
         setIsSearching(false);
     };
 
-    if (!user) return <p>Loading...</p>;
+    if (!user) return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
 
     return (
-        <div className="find-match-page">
+        <div className="find-match-page flex flex-col items-center justify-center h-screen text-center">
             <h1>competitive</h1>
             <div>
                 <p>{user.username}</p>
@@ -118,7 +118,7 @@ export default function FindMatchPage() {
             ) : (
                 <button onClick={handleFindMatch}>Find Match</button>
             )}
-
+            <Link href="/">Back</Link>
         </div>
     );
 }

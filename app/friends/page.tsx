@@ -82,7 +82,7 @@ export default function Friends() {
     }
 
     return (
-        <div>
+        <div className="flex flex-col items-center justify-center h-screen text-center">
             <p>hello this is the friends page</p><br></br>
             <p>Search for friends:</p>
             <input type="text" placeholder="Search by username..." value={inputValue} onChange={(e) => setInputValue(e.target.value)}/>
@@ -126,6 +126,7 @@ export default function Friends() {
                     })}
                 </ul>
             )}
+            <Link href="/">Back</Link>
         </div>
     )
 }

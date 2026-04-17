@@ -20,7 +20,7 @@ export default function Profile() {
     }, []);
 
     if (!user) {
-        return <p>Loading...</p>;
+        return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
     }
 
     return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} />;

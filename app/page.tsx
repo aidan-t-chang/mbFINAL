@@ -34,7 +34,7 @@ function Home() {
   }
 
   return (
-    <div className="home-container">
+    <div className="home-container flex flex-col items-center justify-center h-screen text-center">
       <div>
         {user ? (<><p>hello {user.username}</p>
           <div>
