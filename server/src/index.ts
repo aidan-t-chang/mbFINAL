@@ -2,7 +2,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import { prisma } from "./db/index.js";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
-import "dotenv/config";
 
 const server = new WebSocketServer({ port: 8081 });
 

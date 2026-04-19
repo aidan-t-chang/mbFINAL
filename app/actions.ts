@@ -384,4 +384,25 @@ export async function searchUsers(searchTerm: string) {
         return { success: false, error: "Error searching users" };
     }
 }
+
+export async function getLeaderboard(limit: number = 50) {
+    try {
+        const topUsers = await prisma.user.findMany({
+            take: limit,
+            orderBy: { mbrr: "desc" },
+            select: {
+                id: true,
+                username: true,
+                mbrr: true,
+                rank: true,
+                level: true,
+                totalExp: true,
+            }
+        })
+        return { success: true, users: topUsers };
+    } catch (e) {
+        console.error("Error fetching leaderboard:", e);
+        return { success: false, error: "Failed to fetch leaderboard" };
+    }
+}
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };
