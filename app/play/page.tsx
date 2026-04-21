@@ -4,35 +4,32 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../actions";
 import Link from "next/link";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 export default function FindMatchPage() {
     const router = useRouter();
-    const [user, setUser] = useState<any>(null);
+    const queryClient = useQueryClient();
+
+    const { data: user, isLoading } = useQuery({
+        queryKey: ["currentUser"],
+        queryFn: async () => {
+            const loggedInUser = await getCurrentUser();
+            return loggedInUser || null;
+        },
+    });
+
     const [isSearching, setIsSearching] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [joinRoomId, setJoinRoomId] = useState("");
-    const [roomId, setRoomId] = useState("");
+    const [roomId, setRoomId] = useState(generateRoomId());
 
     const handleJoinRoom = () => {
         if (joinRoomId.trim()) {
         router.push(`/game/${joinRoomId.trim()}`); 
         }
     };
-
-    useEffect(() => {
-        async function fetchUser() {
-            const u = await getCurrentUser();
-            if (!u) {
-                router.push("/login");
-                return;
-            }
-            setUser(u);
-            setRoomId(generateRoomId());
-        }
-        fetchUser();
-    }, [router]);
 
     useEffect(() => {
         if (!isSearching) {
@@ -54,7 +51,7 @@ export default function FindMatchPage() {
                 type: "FIND_MATCH",
                 user: { id: user.id, username: user.username },
                 mbrr: user.mbrr
-            }));``
+            }));
         };
 
         ws.onmessage = (event) => {
@@ -72,6 +69,9 @@ export default function FindMatchPage() {
     };
 
     const handleCancel = () => {
+        if (!user) {
+            return;
+        }
         if (socket) {
             socket.send(JSON.stringify({
                 type: "CANCEL_MATCH",
@@ -82,7 +82,14 @@ export default function FindMatchPage() {
         setIsSearching(false);
     };
 
-    if (!user) return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
+    if (isLoading) {
+        return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
+    }
+
+    if (!user) {
+        router.push("/login");
+        return null;
+    }
 
     return (
         <div className="find-match-page flex flex-col items-center justify-center h-screen text-center">

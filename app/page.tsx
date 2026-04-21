@@ -6,31 +6,41 @@ import { useRouter } from "next/navigation";
 import "./home.css";
 import { getCurrentUser, logout, updateLastOnline } from "./actions";
 import toast from "react-hot-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 function Home() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const queryClient = useQueryClient();
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const loggedInUser = await getCurrentUser();
+      return loggedInUser || null;
+    },
+  });
 
   useEffect(() => {
-    async function fetchUser() {
-      const loggedInUser = await getCurrentUser();
-      if (!loggedInUser) {
-        router.push("/login");
-      }
-      setUser(loggedInUser);
+    if (!isLoading && !user) {
+      router.push("/login");
     }
-    fetchUser();
-  }, [router]);
+  }, [user, isLoading, router]);
 
   const handleLogout = async () => {
-    setUser(null);
+    queryClient.setQueryData(["currentUser"], null);
+
     try {
       await logout();
       toast.success("Logged out successfully!");
     } catch (e) {
       toast.error("Error logging out: " + e);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     }
-    router.push("/");
+    router.push("/login");
+  };
+
+  if (isLoading) {
+    return <div className="home-container flex flex-col items-center justify-center h-screen text-center">loading...</div>;
   }
 
   return (

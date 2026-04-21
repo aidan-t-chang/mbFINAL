@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import LeaderboardItem from "./LeaderboardItem";
 import { getLeaderboard } from "../actions";
+import Link from "next/link";
 
 const fetchLeaderboard = async () => {
     const response = await fetch("http://localhost:4000/api/leaderboard?limit=50");
@@ -38,6 +39,7 @@ export default function Leaderboard() {
                     <LeaderboardItem key={user.id} user={user} place={index + 1} />
                 ))}
             </div>
+            <Link href="/">Back</Link>
         </div>
     )
 }
