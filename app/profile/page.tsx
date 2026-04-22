@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { getCurrentUser, getFriends } from "../actions";
 import ProfileView from "./ProfileView";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
+    const router = useRouter();
     const { data: user, isLoading } = useQuery({
         queryKey: ["currentUser"],
         queryFn: async () => {
@@ -14,20 +16,23 @@ export default function Profile() {
         }
     });
 
-    const [userFriends, setUserFriends] = useState<any[]>([]);
+    const { data: userFriends = [], isLoading: isFriendsLoading } = useQuery({
+        queryKey: ["userFriends"],
+        queryFn: async () => {
+            const result = await getFriends();
+            return result.success ? (result.friends || []) : [];
+        },
+        enabled: !!user,
+    })
 
-    useEffect(() => {
-        getFriends().then(result => {
-            if (result.success) {
-                setUserFriends(result.friends || []);
-            } else {
-                setUserFriends([]);
-            }
-        });
-    }, []);
+
+
+    if (isLoading || isFriendsLoading) {
+        return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
+    }
 
     if (!user) {
-        return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
+        router.push("/login");
     }
 
     return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} />;

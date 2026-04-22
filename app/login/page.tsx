@@ -4,25 +4,21 @@ import { useState, useEffect } from "react";
 import { createAccount, login, logout } from "../actions";
 import { getCurrentUser } from "../actions";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import toast from 'react-hot-toast';
 import "./login.css";
 
 export default function LoginPage() {
-    const [userLogin, setuserLogin] = useState(true);
-    const [user, setUser] = useState<any>(null);
-    const router = useRouter();
-
-    useEffect(() => {
-        async function fetchUser() {
+    const { data: user, isLoading } = useQuery({
+        queryKey: ["currentUser"],
+        queryFn: async () => {
             const loggedInUser = await getCurrentUser();
-            setUser(loggedInUser);
-            if (loggedInUser) {
-                router.push("/");
-            }
+            return loggedInUser || null;
         }
-        fetchUser();
-    }, [router]);
+    });
 
+    const [userLogin, setuserLogin] = useState(true);
+    const router = useRouter();
 
     const handleSubmit = async (formData: FormData) => {
         if (userLogin) {
