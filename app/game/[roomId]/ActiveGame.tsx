@@ -6,13 +6,31 @@ import { getCurrentUser, getGameQuestions, cleanUpQuestions, saveGameResults } f
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ActiveGame({ socket }: { socket: WebSocket | null }, isCustomLobby?: boolean) {
     const { roomId } = useParams();
     const router = useRouter();
+    const [questions, setQuestions] = useState<{ question: string, correctAnswer: number }[]>([]);
 
-    const [user, setUser] = useState<any>(null);
-    const [questions, setQuestions] = useState<any[]>([]);
+    const { data: user, isLoading: isUserLoading } = useQuery({
+        queryKey: ["currentUser"],
+        queryFn: getCurrentUser,
+    });
+
+    const [questionsReady, setQuestionsReady] = useState(false);
+
+    const { data: fetchedQuestions, isLoading: areQuestionsLoading } = useQuery({
+        queryKey: ["questions", roomId],
+        queryFn: () => getGameQuestions(roomId as string),
+        enabled: questionsReady && !!roomId,
+    });
+
+    useEffect(() => {
+        if (fetchedQuestions) {
+            setQuestions(fetchedQuestions);
+        }
+    }, [fetchedQuestions]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentInput, setCurrentInput] = useState("");
@@ -39,43 +57,80 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     }, [currentIndex]);
 
     useEffect(() => {
-        async function setUpGame() {
-            const currentUser = await getCurrentUser();
-            if (!currentUser) {
-                return router.push("/login");
-            }
-            setUser(currentUser);
+        if (!user) {
+            return;
+        }
 
-            if (socket) {
-                socket.onmessage = async (event) => {
-                    const data = JSON.parse(event.data);
+        if (!user && !isUserLoading) {
+            router.push("/login");
+            return;
+        }
 
-                    if (data.type === "QUESTIONS_READY") {
-                        const gameQuestions = await getGameQuestions(roomId as string);
-                        setQuestions(gameQuestions);
+        if (socket) {
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === "QUESTIONS_READY") {
+                    setQuestionsReady(true);
+                }
+
+                if (data.type === "GAME_ACTION" && data.user.id !== user.id) {
+                    if (!opponentUsername) {
+                        setOpponentUsername(data.user.username);
                     }
-
-                    if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
-                        if (!opponentUsername) {
-                            setOpponentUsername(data.user.username);
+                    if (data.action === "CORRECT_ANSWER") {
+                        if (data.score !== undefined) {
+                            setOpponentScore(data.score);
                         }
-                        if (data.action === "CORRECT_ANSWER") {
-                            if (data.score !== undefined) {
-                                setOpponentScore(data.score);
-                            }
-                            if (data.combo !== undefined) {
-                                setOpponentCombo(data.combo);
-                            } 
-                            if (data.comboLevel !== undefined) {
-                                setOpponentComboLevel(data.comboLevel);
-                            }
+                        if (data.combo !== undefined) {
+                            setOpponentCombo(data.combo);
+                        }
+                        if (data.comboLevel !== undefined) {
+                            setOpponentComboLevel(data.comboLevel);
                         }
                     }
-                };
+                }
             }
         }
-        setUpGame();
-    }, [roomId, router, socket]);
+    }, [user, isUserLoading, router, socket, roomId, opponentUsername]);
+
+    // useEffect(() => {
+    //     async function setUpGame() {
+    //         const currentUser = await getCurrentUser();
+    //         if (!currentUser) {
+    //             return router.push("/login");
+    //         }
+
+    //         if (socket) {
+    //             socket.onmessage = async (event) => {
+    //                 const data = JSON.parse(event.data);
+
+    //                 if (data.type === "QUESTIONS_READY") {
+    //                     const gameQuestions = await getGameQuestions(roomId as string);
+    //                     setQuestions(gameQuestions);
+    //                 }
+
+    //                 if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
+    //                     if (!opponentUsername) {
+    //                         setOpponentUsername(data.user.username);
+    //                     }
+    //                     if (data.action === "CORRECT_ANSWER") {
+    //                         if (data.score !== undefined) {
+    //                             setOpponentScore(data.score);
+    //                         }
+    //                         if (data.combo !== undefined) {
+    //                             setOpponentCombo(data.combo);
+    //                         } 
+    //                         if (data.comboLevel !== undefined) {
+    //                             setOpponentComboLevel(data.comboLevel);
+    //                         }
+    //                     }
+    //                 }
+    //             };
+    //         }
+    //     }
+    //     setUpGame();
+    // }, [roomId, router, socket]);
 
     useEffect(() => {
         if (!user || questions.length === 0 || gameOver) return;
@@ -115,6 +170,10 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     }, [myScore, opponentScore]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!user) {
+            return;
+        }
+
         const val = e.target.value.replace(/[^0-9-]/g, ""); // only allow numbers and negative
         setCurrentInput(val);
 
@@ -172,7 +231,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         }
     };
 
-    if (!user || questions.length === 0) {
+    if (isUserLoading || areQuestionsLoading || !user || questions.length === 0) {
         return (<>
             <div className="flex flex-col items-center justify-center h-screen">
                 <h2 className="text-2xl font-bold mb-4">Loading game...</h2>

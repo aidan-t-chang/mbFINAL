@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function ProfileView({ profileUser, isOwnProfile, currentUserFriends, profileFriends }: { profileUser: any, isOwnProfile: boolean, currentUserFriends: any[], profileFriends: any[] }) {
     const winLossRatio = profileUser.wins + profileUser.losses > 0 ? (profileUser.wins / (profileUser.wins + profileUser.losses)).toFixed(2) : "N/A";
-    const winrate = profileUser.wins / (profileUser.wins + profileUser.losses) * 100;
+    const winrate = (profileUser.wins + profileUser.losses === 0) ? 0 : profileUser.wins / (profileUser.wins + profileUser.losses) * 100;
 
     const handleAddFriend = async () => {
         const result = await sendFriendRequest(profileUser.id);
