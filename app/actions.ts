@@ -153,11 +153,39 @@ async function cleanUpQuestions(roomId: string, questionIndex: number) {
     }
 }
 
-async function saveGameResults(roomId: string, score: number, isWinner: boolean) {
+export function calculateLevel(totalExp: number) {
+    let level = 0;
+    let expRemaining = totalExp;
+    let nextLevelExp = 5000; // level 1
+
+    while (expRemaining >= nextLevelExp) {
+        level++;
+        expRemaining -= nextLevelExp;
+        nextLevelExp = level * 5000; // increase required exp for next level
+    }
+
+    return level;
+}
+
+async function saveGameResults(roomId: string, score: number, isWinner: boolean, highestCombo: number, questionsAnswered: number) {
     const user = await getCurrentUser();
     if (!user) {
         return;
     }
+
+    // score is around 70-80k for full match
+    // divide by 10, 7000-8000 xp
+    // combo around 25-30, bonus of 50xp per combo so 1250-1500
+    // questions answered 25-30, bonus of 25xp per question so 625-750
+    // win: 1000xp
+
+    // need to check level up as well - each level should be level * 5000 xp
+
+    const baseExp = Math.floor(score / 10); 
+    const comboBonus = highestCombo * 50;
+    const qAnsweredBonus = questionsAnswered * 25;
+    const finalScore = baseExp + comboBonus + qAnsweredBonus + (isWinner ? 1000 : 0);
+    // not even going to worry about glicko2 rating implementation for right now
 
     try {
         await prisma.gamePlayer.update({
@@ -184,7 +212,10 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean)
 
         await prisma.user.update({
             where: { id: user.id },  
-            data: { totalExp: { increment: score }, gamesPlayed: { increment: 1 } } // change xp to someting else maybe
+            data: { 
+                totalExp: { increment: finalScore }, 
+                gamesPlayed: { increment: 1 },
+             }
         });
 
         return { success: true };

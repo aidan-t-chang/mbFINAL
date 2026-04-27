@@ -153,7 +153,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         // clean up questions
         if (gameOver) {
             const isWinner = myScore > opponentScore;
-            saveGameResults(roomId as string, myScore, isWinner);
+            saveGameResults(roomId as string, myScore, isWinner, maxCombo, currentIndex);
 
             if (myScore >= opponentScore) {
                 cleanUpQuestions(roomId as string, currentIndex);

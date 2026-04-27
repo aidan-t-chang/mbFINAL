@@ -110,6 +110,10 @@ export default function Game() {
         return <ActiveGame socket={socket} />
     }
 
+    if (isMatchmaking) {
+        return <p className="flex flex-col items-center justify-center h-screen">Match found! Preparing game...</p>;
+    }
+
     return (
         <>
             <div>gameroom {roomId}</div>
