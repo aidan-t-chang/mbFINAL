@@ -7,6 +7,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
+import XpBar from "./XpBar";
 
 export default function ActiveGame({ socket }: { socket: WebSocket | null }, isCustomLobby?: boolean) {
     const { roomId } = useParams();
@@ -45,6 +46,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     const [comboLevel, setComboLevel] = useState(1);
     const [maxCombo, setMaxCombo] = useState(0);
     const [isInputDisabled, setIsInputDisabled] = useState(false);
+    const [xpData, setXpData] = useState<{ expGained: number, oldTotalExp: number, newTotalExp: number } | null>(null);
 
     const [scoreHistory, setScoreHistory] = useState<{ time: number, myScore: number, opponentScore: number }[]>([
         { time: 60, myScore: 0, opponentScore: 0 }
@@ -151,16 +153,27 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
 
     useEffect(() => {
         // clean up questions
-        if (gameOver) {
-            const isWinner = myScore > opponentScore;
-            saveGameResults(roomId as string, myScore, isWinner, maxCombo, currentIndex);
+        async function handleGameOver() {
+            if (gameOver) {
+                const isWinner = myScore > opponentScore;
+                const result = await saveGameResults(roomId as string, myScore, isWinner, maxCombo, currentIndex);
 
-            if (myScore >= opponentScore) {
-                cleanUpQuestions(roomId as string, currentIndex);
+                if (result && result.success) {
+                    setXpData({
+                        expGained: result.expGained as number,
+                        oldTotalExp: result.oldTotalExp as number,
+                        newTotalExp: result.newTotalExp as number,
+                    });
+                }
+
+                if (myScore >= opponentScore) {
+                    cleanUpQuestions(roomId as string, currentIndex);
+                }
+
+                setScoreHistory(prev => [...prev, { time: 0, myScore, opponentScore }]);
             }
-
-            setScoreHistory(prev => [...prev, { time: 0, myScore, opponentScore }]);
         }
+        handleGameOver();
     }, [gameOver, currentIndex, roomId, myScore, opponentScore]);
 
     useEffect(() => {
@@ -249,8 +262,12 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                 {myScore < opponentScore && <p className="text-red-500">you lose</p>}
                 <p>you answered {currentIndex} questions</p>
                 <p>max combo: {maxCombo}</p>
-                <Link href="/">Return to Lobby</Link>
                 {/* eventually show mbrr increase after implementation of glicko2 rating*/}
+                {xpData ? (
+                    <XpBar user={user} xpData={xpData} />
+                ) : (
+                    <p className="text-sm">calculating xp...</p>
+                )}
                 <div className="graph-container">
                     <h3 className="text-center">score history</h3>
                     <ResponsiveContainer width="100%" height={300}>
@@ -264,6 +281,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
+                <Link href="/">Return to Lobby</Link>
             </div>
         )
     }

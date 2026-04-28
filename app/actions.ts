@@ -3,6 +3,7 @@
 import { prisma } from "../server/src/db/index";
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { calculateLevel } from "./utils";
 
 async function createAccount(formData: FormData) {
     const email = formData.get("email") as string;
@@ -153,20 +154,6 @@ async function cleanUpQuestions(roomId: string, questionIndex: number) {
     }
 }
 
-export function calculateLevel(totalExp: number) {
-    let level = 0;
-    let expRemaining = totalExp;
-    let nextLevelExp = 5000; // level 1
-
-    while (expRemaining >= nextLevelExp) {
-        level++;
-        expRemaining -= nextLevelExp;
-        nextLevelExp = level * 5000; // increase required exp for next level
-    }
-
-    return level;
-}
-
 async function saveGameResults(roomId: string, score: number, isWinner: boolean, highestCombo: number, questionsAnswered: number) {
     const user = await getCurrentUser();
     if (!user) {
@@ -174,6 +161,8 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
     }
 
     // score is around 70-80k for full match
+    // nvm, i just got 113k from one match
+    // dial back score?
     // divide by 10, 7000-8000 xp
     // combo around 25-30, bonus of 50xp per combo so 1250-1500
     // questions answered 25-30, bonus of 25xp per question so 625-750
@@ -185,6 +174,13 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
     const comboBonus = highestCombo * 50;
     const qAnsweredBonus = questionsAnswered * 25;
     const finalScore = baseExp + comboBonus + qAnsweredBonus + (isWinner ? 1000 : 0);
+
+    const oldTotalExp = user.totalExp || 0;
+    const newTotalExp = oldTotalExp + finalScore;
+
+    const oldLevelData = calculateLevel(oldTotalExp);
+    const newLevelData = calculateLevel(newTotalExp);
+    const incLevel = newLevelData.level - oldLevelData.level;
     // not even going to worry about glicko2 rating implementation for right now
 
     try {
@@ -215,10 +211,17 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
             data: { 
                 totalExp: { increment: finalScore }, 
                 gamesPlayed: { increment: 1 },
+                ...(incLevel > 0 && { level: { increment: incLevel } })
              }
         });
 
-        return { success: true };
+        return {
+            success: true,
+            expGained: finalScore,
+            oldTotalExp: oldTotalExp,
+            newTotalExp: newTotalExp,
+        }
+
     } catch (e) {
         console.error("Error saving game results:", e);
         return { success: false, error: e };
