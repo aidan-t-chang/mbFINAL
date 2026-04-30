@@ -1,11 +1,25 @@
+import express from "express";
+import http from "http";
+import cors from "cors";
 import { WebSocketServer, WebSocket } from "ws";
 import { prisma } from "./db/index.js";
 import { Prisma } from "@prisma/client";
 import { randomUUID } from "crypto";
 
-const server = new WebSocketServer({ port: 8081 });
+const app = express();
+app.use(cors());
+const httpServer = http.createServer(app);
+const server = new WebSocketServer({ server: httpServer });
 
 const rooms = new Map<string, Map<WebSocket, any>>();
+
+app.get("/api/queue-size", (req, res) => {
+    res.json({ size: matchmakingQueue.length });
+});
+
+httpServer.listen(8081, () => {
+    console.log("Server is listening on port 8081");
+})
 
 interface QueuePlayer {
     socket: WebSocket;

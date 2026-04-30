@@ -25,7 +25,13 @@ export default function Profile() {
         enabled: !!user,
     })
 
-
+    const { data: userFriendsLength = 0 } = useQuery({
+        queryKey: ["userFriendsLength"],
+        queryFn: async () => {
+            const result = await getFriends();
+            return result.success ? (result.numFriends || 0) : 0;
+        },
+    })
 
     if (isLoading || isFriendsLoading) {
         return <p className="text-center flex flex-col items-center justify-center h-screen">Loading...</p>;
@@ -35,5 +41,5 @@ export default function Profile() {
         router.push("/login");
     }
 
-    return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} />;
+    return <ProfileView profileUser={user} isOwnProfile={true} currentUserFriends={userFriends} profileFriends={userFriends} numFriends={userFriendsLength} />;
 }

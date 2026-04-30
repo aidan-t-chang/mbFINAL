@@ -9,7 +9,7 @@ export default function Settings() {
     return  (
         <div>
             <p className="text-center flex flex-col items-center justify-center h-screen">i don't know what settings to display...</p>
-            <Link href="/">Back</Link>
+            <Link className="text-center" href="/">Back</Link>
         </div>
             )
 }

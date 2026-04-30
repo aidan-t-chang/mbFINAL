@@ -25,6 +25,24 @@ export default function FindMatchPage() {
     const [joinRoomId, setJoinRoomId] = useState("");
     const [roomId, setRoomId] = useState(generateRoomId());
 
+    const { data: queueSize = 0 } = useQuery({
+        queryKey: ["queueSize"],
+        queryFn: async () => {
+            try {
+                const res = await fetch("http://localhost:8081/api/queue-size");
+                if (!res.ok) {
+                    return 0;
+                }
+                const data = await res.json();
+                return data.size || 0;
+            } catch (e) {
+                console.log("Failed to fetch queue size:", e);
+                return 0;
+            }
+        },
+        refetchInterval: 5000,
+    })
+
     const handleJoinRoom = () => {
         if (joinRoomId.trim()) {
         router.push(`/game/${joinRoomId.trim()}`); 
@@ -52,6 +70,8 @@ export default function FindMatchPage() {
                 user: { id: user.id, username: user.username },
                 mbrr: user.mbrr
             }));
+            
+            queryClient.invalidateQueries({ queryKey: ["queueSize"] });
         };
 
         ws.onmessage = (event) => {
@@ -79,6 +99,7 @@ export default function FindMatchPage() {
             }));
             socket.close();
         }
+        queryClient.invalidateQueries({ queryKey: ["queueSize"] });
         setIsSearching(false);
     };
 
@@ -93,14 +114,24 @@ export default function FindMatchPage() {
 
     return (
         <div className="find-match-page flex flex-col items-center justify-center h-screen text-center">
-            <h1>competitive</h1>
+            <h1 className="font-bold">competitive</h1>
             <div>
                 <p>{user.username}</p>
                 <p>{user.rank} ({user.mbrr} mbrr)</p>
             </div>
+            { isSearching ? (
+                <div>
+                    <p>searching...</p>
+                    <p>time elapsed: {elapsedTime} seconds</p>
+                    <p>{queueSize} players in queue</p>
+                    <button onClick={handleCancel}>Cancel</button>
+                </div>
+            ) : (
+                <button onClick={handleFindMatch}>Find Match</button>
+            )}
             {/* add other gamemodes later */}
             <div>
-                <h1>custom game</h1>
+                <h1 className="font-bold">custom game</h1>
                 <div>
                     <Link href={`/game/${roomId}`}>create new game</Link>
                 </div>
@@ -115,16 +146,6 @@ export default function FindMatchPage() {
                     <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
                 </div>
             </div>
-
-            { isSearching ? (
-                <div>
-                    <p>searching...</p>
-                    <p>time elapsed: {elapsedTime} seconds</p>
-                    <button onClick={handleCancel}>Cancel</button>
-                </div>
-            ) : (
-                <button onClick={handleFindMatch}>Find Match</button>
-            )}
             <Link href="/">Back</Link>
         </div>
     );

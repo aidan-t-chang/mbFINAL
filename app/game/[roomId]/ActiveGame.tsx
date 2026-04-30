@@ -47,6 +47,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     const [maxCombo, setMaxCombo] = useState(0);
     const [isInputDisabled, setIsInputDisabled] = useState(false);
     const [xpData, setXpData] = useState<{ expGained: number, oldTotalExp: number, newTotalExp: number } | null>(null);
+    const [isWinner, setIsWinner] = useState(false);
 
     const [scoreHistory, setScoreHistory] = useState<{ time: number, myScore: number, opponentScore: number }[]>([
         { time: 60, myScore: 0, opponentScore: 0 }
@@ -179,6 +180,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     useEffect(() => {
         if (myScore > 0 || opponentScore > 0) {
             setScoreHistory(prev => [...prev, { time: timeLeft, myScore, opponentScore}]);
+            setIsWinner(myScore > opponentScore);
         }
     }, [myScore, opponentScore]);
 
@@ -262,6 +264,12 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                 {myScore < opponentScore && <p className="text-red-500">you lose</p>}
                 <p>you answered {currentIndex} questions</p>
                 <p>max combo: {maxCombo}</p>
+
+                <p>base xp: {Math.floor(myScore * 0.1)}</p>
+                <p>question bonus: {currentIndex * 25}</p>
+                <p>combo bonus: {maxCombo * 50}</p>
+                <p>win bonus: {isWinner ? 1000 : 0}</p>
+                <p>total xp gained: {xpData ? xpData.expGained : "calculating..."}</p>
                 {/* eventually show mbrr increase after implementation of glicko2 rating*/}
                 {xpData ? (
                     <XpBar user={user} xpData={xpData} />

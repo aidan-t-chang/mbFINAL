@@ -161,8 +161,6 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
     }
 
     // score is around 70-80k for full match
-    // nvm, i just got 113k from one match
-    // dial back score?
     // divide by 10, 7000-8000 xp
     // combo around 25-30, bonus of 50xp per combo so 1250-1500
     // questions answered 25-30, bonus of 25xp per question so 625-750
@@ -211,7 +209,8 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
             data: { 
                 totalExp: { increment: finalScore }, 
                 gamesPlayed: { increment: 1 },
-                ...(incLevel > 0 && { level: { increment: incLevel } })
+                ...(incLevel > 0 && { level: { increment: incLevel } }),
+                ...(isWinner ? { wins: { increment: 1 } } : { losses: { increment: 1 } }),
              }
         });
 
@@ -334,7 +333,7 @@ export async function getFriends() {
                 }
             }
         })
-        return { success: true, friends }
+        return { success: true, friends, numFriends: friends.length };
     } catch (e) {
         console.error("Error fetching friends:", e);
         return { success: false, error: "Error fetching friends" };
@@ -383,6 +382,13 @@ export async function acceptFriendRequest(userId: number, friendId: number) {
                 }
             },
             data: { status: "ACCEPTED" }
+        })
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                friends: { increment: 1 }
+            }
         })
     }
     catch (e) {
