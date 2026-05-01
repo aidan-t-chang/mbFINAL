@@ -26,6 +26,8 @@ function Home() {
     }
   }, [user, isLoading, router]);
 
+  // i need this for the commit
+
   const handleLogout = async () => {
     queryClient.setQueryData(["currentUser"], null);
 
