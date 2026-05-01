@@ -29,7 +29,8 @@ export default function FindMatchPage() {
         queryKey: ["queueSize"],
         queryFn: async () => {
             try {
-                const res = await fetch("http://localhost:8081/api/queue-size");
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+                const res = await fetch(`${API_URL}/queue-size`);
                 if (!res.ok) {
                     return 0;
                 }
