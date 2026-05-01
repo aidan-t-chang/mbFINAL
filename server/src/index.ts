@@ -17,8 +17,9 @@ app.get("/api/queue-size", (req, res) => {
     res.json({ size: matchmakingQueue.length });
 });
 
-httpServer.listen(8081, () => {
-    console.log("Server is listening on port 8081");
+const PORT = process.env.PORT || 8081;
+httpServer.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
 })
 
 interface QueuePlayer {

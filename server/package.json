@@ -5,7 +5,8 @@
   "description": "MathBlitz Real-Time Server",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@prisma/client": "^7.4.2",
