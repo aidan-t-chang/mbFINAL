@@ -37,7 +37,7 @@ async function createAccount(formData: FormData) {
         if (error.code === "P2002") {
             return { success: false, error: "Email or username already exists" };
         }
-        return { success: false, error: error};
+        return { success: false, error: error.message || "Error creating account" };
     }
 
 }
@@ -84,7 +84,7 @@ async function login(formData: FormData) {
 
         return { success: true, user: { id: user.id, email: user.email, username: user.username } };
     } catch (error: any) {
-        return { success: false, error: error };
+        return { success: false, error: error.message || "Error logging in" };
     }
 }
 
