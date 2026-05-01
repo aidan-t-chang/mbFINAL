@@ -62,7 +62,8 @@ export default function FindMatchPage() {
         if (!user) return;
 
         setIsSearching(true);
-        const ws = new WebSocket("ws://localhost:8081");
+        const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081";
+        const ws = new WebSocket(WS_URL);
 
         ws.onopen = () => {
             ws.send(JSON.stringify({
