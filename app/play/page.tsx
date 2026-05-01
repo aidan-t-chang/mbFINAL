@@ -30,7 +30,7 @@ export default function FindMatchPage() {
         queryFn: async () => {
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
-                const res = await fetch(`${API_URL}/queue-size`);
+                const res = await fetch(`${API_URL}/api/queue-size`);
                 if (!res.ok) {
                     return 0;
                 }
