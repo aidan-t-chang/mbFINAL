@@ -140,7 +140,7 @@ async function cleanUpQuestions(roomId: string, questionIndex: number) {
     const allQuestions = await getGameQuestions(roomId);
 
     const unusedQuestions = allQuestions.slice(questionIndex);
-    const unusedQuestionIds = unusedQuestions.map(q => q.id);
+    const unusedQuestionIds = unusedQuestions.map((q: { id: number }) => q.id);
 
     if (unusedQuestionIds.length > 0) {
         try {
