@@ -296,7 +296,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
 
     const currentQuestion = questions[currentIndex];
     return (
-        <>
+        <div className="active-game-container flex flex-col items-center justify-center h-screen text-center">
             <div className="active-game-container">
                 <div className="game-header">
                     {/* time left is probably going to be a progress bar*/}
@@ -327,6 +327,6 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     }}
                 />
             </div>
-        </>
+        </div>
     )
 }

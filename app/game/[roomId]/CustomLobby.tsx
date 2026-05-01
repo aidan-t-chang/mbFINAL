@@ -17,7 +17,7 @@ export default function CustomLobby({
     onStartGame
 }: CustomLobbyProps) {
     return (
-        <>
+        <div className="custom-lobby flex flex-col items-center justify-center h-screen text-center">
             <div>gameroom {roomId}</div>
             <div>
                 <h2>players:</h2>
@@ -32,6 +32,6 @@ export default function CustomLobby({
             <div>
                 <button className="game-button" disabled={!isReady} onClick={onStartGame}>Start Game</button>
             </div>
-        </>
+        </div>
     )
 }
