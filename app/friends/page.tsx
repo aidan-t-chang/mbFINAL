@@ -76,7 +76,7 @@ export default function Friends() {
                 <p>You have no pending friend requests.</p>
             ) : (
                 <ul>
-                    {friendRequests?.requests?.map((request) => (
+                    {friendRequests?.requests?.map((request: { user: { id: number; username: string }; userId: number; friendId: number }) => (
                         <li key={request.user.id}>
                             <span>{request.user.username}</span>
                             <button onClick={() => handleAcceptRequest(request.userId, request.friendId)}>Accept</button>
