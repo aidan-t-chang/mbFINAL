@@ -89,7 +89,7 @@ export default function Friends() {
                 <p>You have no friends yet.</p>
             ) : (
                 <ul>
-                    {friends?.friends?.map((friend) => {
+                    {friends?.friends?.map((friend: { id: number; userId: number; friendId: number; user: { id: number; username: string }; friend: { id: number; username: string } }) => {
                         const isSender = friend.userId === currentUser?.id;
                         const actualFriend = isSender ? friend.friend : friend.user;
                         return (
