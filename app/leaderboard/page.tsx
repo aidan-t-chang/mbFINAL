@@ -35,7 +35,7 @@ export default function Leaderboard() {
             <div>
                 {}
                 {response?.users?.map((user: any, index: number) => (
-                    <LeaderboardItem key={user.id} user={user} place={index + 1} />
+                    <LeaderboardItem key={user.id} user={user} place={index + 1} version={currentLeaderboard} />
                 ))}
             </div>
             <Link href="/">Back</Link>

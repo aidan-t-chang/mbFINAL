@@ -5,6 +5,7 @@ interface LeaderboardUser {
     username: string;
     rank: string;
     mbrr: number;
+    totalExp: number;
 }
 
 interface LeaderboardItemProps {
@@ -12,7 +13,7 @@ interface LeaderboardItemProps {
     place: number;
 }
 
-export default function LeaderboardItem({ user, place }: LeaderboardItemProps) {
+export default function LeaderboardItem({ user, place, version }: LeaderboardItemProps & { version: "mbrr" | "totalExp" }) {
     return (
         <div className="leaderboard-container">
             <div>
@@ -24,7 +25,7 @@ export default function LeaderboardItem({ user, place }: LeaderboardItemProps) {
             </div>
 
             <div>
-                <span className="leaderboard-rank">{user.rank} ({user.mbrr.toFixed(2)})</span>
+                <span className="leaderboard-rank">{user.rank} ({version === "mbrr" ? user.mbrr.toFixed(2) : user.totalExp.toFixed(2)})</span>
             </div>
         </div>
     )
