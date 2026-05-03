@@ -321,7 +321,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
                     value={currentInput}
                     onChange={handleInputChange}
                     autoFocus
-                    className="answer-input"
+                    className="answer-input text-center text-black-500"
                     style={{ opacity: isInputDisabled ? 0.5 : 1,
                         backgroundColor: isInputDisabled ? "#f8d7da" : "white",
                     }}

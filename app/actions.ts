@@ -425,11 +425,11 @@ export async function searchUsers(searchTerm: string) {
     }
 }
 
-export async function getLeaderboard(limit: number = 50) {
+export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" = "mbrr") {
     try {
         const topUsers = await prisma.user.findMany({
             take: limit,
-            orderBy: { mbrr: "desc" },
+            orderBy: { [byWhat]: "desc" },
             select: {
                 id: true,
                 username: true,
