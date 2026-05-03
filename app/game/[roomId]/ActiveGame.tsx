@@ -13,6 +13,7 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
     const { roomId } = useParams();
     const router = useRouter();
     const [questions, setQuestions] = useState<{ question: string, correctAnswer: number }[]>([]);
+    const answerTimes = useRef<number[]>([]);
 
     const { data: user, isLoading: isUserLoading } = useQuery({
         queryKey: ["currentUser"],
@@ -157,7 +158,14 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         async function handleGameOver() {
             if (gameOver) {
                 const isWinner = myScore > opponentScore;
-                const result = await saveGameResults(roomId as string, myScore, isWinner, maxCombo, currentIndex);
+
+                let averageAnswerTime = 0;
+                if (answerTimes.current.length > 0) {
+                    const total = answerTimes.current.reduce((acc, time) => acc + time, 0);
+                    averageAnswerTime = total / answerTimes.current.length;
+                }
+
+                const result = await saveGameResults(roomId as string, myScore, isWinner, maxCombo, currentIndex, averageAnswerTime);
 
                 if (result && result.success) {
                     setXpData({
@@ -202,6 +210,8 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
             if (currentQuestion && parseInt(val) === currentQuestion.correctAnswer) {
 
                 const elapsedMs = Date.now() - questionStartTime.current;
+
+                answerTimes.current.push(elapsedMs);
                 
                 let baseScore = 1000;
                 if (elapsedMs > 500) {

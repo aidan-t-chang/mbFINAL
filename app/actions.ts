@@ -154,7 +154,7 @@ async function cleanUpQuestions(roomId: string, questionIndex: number) {
     }
 }
 
-async function saveGameResults(roomId: string, score: number, isWinner: boolean, highestCombo: number, questionsAnswered: number) {
+async function saveGameResults(roomId: string, score: number, isWinner: boolean, highestCombo: number, questionsAnswered: number, averageAnswerTime: number) {
     const user = await getCurrentUser();
     if (!user) {
         return;
@@ -211,6 +211,7 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
                 gamesPlayed: { increment: 1 },
                 ...(incLevel > 0 && { level: { increment: incLevel } }),
                 ...(isWinner ? { wins: { increment: 1 } } : { losses: { increment: 1 } }),
+                avgAnswerTime: user.avgAnswerTime ? ((user.avgAnswerTime * (user.gamesPlayed) + averageAnswerTime) / (user.gamesPlayed + 1)) : averageAnswerTime,
              }
         });
 
