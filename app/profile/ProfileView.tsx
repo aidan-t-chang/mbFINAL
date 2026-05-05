@@ -25,9 +25,10 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
             <p>{profileUser.timePlayed} hours</p><br></br>
             <p>Rank: {profileUser.rank} ({profileUser.mbrr}mbrr)</p><br></br>
             <p>Level {profileUser.level} ({profileUser.totalExp.toLocaleString()} total xp)</p><br></br>
-            <p>W/L Ratio: {winLossRatio} ({profileUser.wins}W / {profileUser.losses}L)</p><br></br>
+            <p>{profileUser.wins} wins / {profileUser.losses} losses</p><br></br>
             <p>{profileUser.gamesPlayed} games played</p>
             <p>Winrate: {winrate.toFixed(2)}%</p><br></br>
+            <p>Average Answer Time: {profileUser.avgAnswertime}ms</p>
 
             {isOwnProfile ? (
                 <div>

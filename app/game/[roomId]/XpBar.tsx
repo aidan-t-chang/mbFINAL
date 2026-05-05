@@ -46,7 +46,7 @@ export default function XpBar({ user, xpData }: { user: any, xpData: { expGained
                 <span className="text-sm">+{xpData?.expGained}</span>
             </div>
 
-            <div className="w-full bg-gray-300 rounded-full overflow-hidden relative">
+            <div className="w-full h-4 bg-gray-300 rounded-full overflow-hidden relative">
                 <div className="bg-blue-500 h-full transition-all duration-75" style={{ width: `${fillPct}%` }}>
                 </div>
             </div>

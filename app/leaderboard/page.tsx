@@ -9,7 +9,7 @@ import { getLeaderboard } from "../actions";
 import Link from "next/link";
 
 export default function Leaderboard() {
-    const [currentLeaderboard, setCurrentLeaderboard] = useState<"mbrr" | "totalExp">("mbrr");
+    const [currentLeaderboard, setCurrentLeaderboard] = useState<"mbrr" | "totalExp" | "bestSurvivalScore">("mbrr");
     const { data: response, isLoading, error } = useQuery({
         queryKey: [`${currentLeaderboard}_leaderboard`],
         queryFn: () => getLeaderboard(50, currentLeaderboard),
@@ -26,10 +26,11 @@ export default function Leaderboard() {
 
     return (
         <div className="leaderboard-view flex flex-col items-center justify-center h-screen text-center">
-            <h1> Leaderboard </h1>
-            <select className="mb-4 p-2 border rounded" value={currentLeaderboard} onChange={(e) => setCurrentLeaderboard(e.target.value as "mbrr" | "totalExp")}>
+            <h1 className="text-3xl font-bold mb-6"> Leaderboard </h1>
+            <select className="mb-4 p-2 border rounded" value={currentLeaderboard} onChange={(e) => setCurrentLeaderboard(e.target.value as "mbrr" | "totalExp" | "bestSurvivalScore")}>
                 <option value="mbrr">MBRR</option>
                 <option value="totalExp">Total EXP</option>
+                <option value="bestSurvivalScore">Survival Score</option>
             </select>
 
             <div>

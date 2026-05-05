@@ -118,6 +118,7 @@ async function getCurrentUser() {
             losses: true,
             avgAnswerTime: true,
             friends: true,
+            bestSurvivalScore: true,
         }
     });
 
@@ -245,6 +246,7 @@ async function getUserByUsername(username: string) {
             losses: true,
             avgAnswerTime: true,
             friends: true,
+            bestSurvivalScore: true,
         }
     })
 }
@@ -426,7 +428,7 @@ export async function searchUsers(searchTerm: string) {
     }
 }
 
-export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" = "mbrr") {
+export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" | "bestSurvivalScore" = "mbrr") {
     try {
         const topUsers = await prisma.user.findMany({
             take: limit,
@@ -438,6 +440,7 @@ export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "total
                 rank: true,
                 level: true,
                 totalExp: true,
+                bestSurvivalScore: true,
             }
         })
         return { success: true, users: topUsers };
@@ -446,4 +449,73 @@ export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "total
         return { success: false, error: "Failed to fetch leaderboard" };
     }
 }
+
+export async function getSurvivalBatch(roomId: string, batchSize: number = 50) {
+    const newQuestions = [];
+    const uniqueQuestions = new Set<string>();
+
+    while (newQuestions.length < batchSize) {
+        const num1 = Math.floor(Math.random() * 20) + 1; 
+        const num2 = Math.floor(Math.random() * 20) + 1;
+
+        const isAddition = Math.random() > 0.5;
+        const questionText = isAddition ? `${num1} + ${num2}` : `${num1} - ${num2}`;
+        const answer = isAddition ? (num1 + num2) : (num1 - num2);
+
+        if (!uniqueQuestions.has(questionText)) {
+            uniqueQuestions.add(questionText);
+            newQuestions.push({
+                gameId: roomId,
+                question: questionText,
+                correctAnswer: answer
+            });
+        }
+    }
+
+    try {
+        await prisma.question.createMany({
+            data: newQuestions
+        });
+
+        return newQuestions;
+    } catch (e) {
+        console.error("Error creating survival questions:", e);
+        return null;
+    }
+}
+
+export async function saveSurvivalScore(score: number, questionsAnswered: number) {
+    const user = await getCurrentUser();
+    if (!user) {
+        return { success: false, error: "Not logged in" };
+    }
+
+    try {
+        const currentUserData = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { bestSurvivalScore: true }
+        });
+
+        const newBest = currentUserData?.bestSurvivalScore 
+            ? Math.max(currentUserData.bestSurvivalScore, score) 
+            : score;
+
+        const expGained = Math.floor(score / 10);
+        
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                bestSurvivalScore: newBest,
+                totalExp: { increment: expGained },
+                gamesPlayed: { increment: 1 }
+            }
+        });
+
+        return { success: true, newBest, expGained };
+    } catch (e) {
+        console.error("Error saving survival score:", e);
+        return { success: false, error: "Failed to save score" };
+    }
+}
+
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };

@@ -132,6 +132,7 @@ export default function FindMatchPage() {
                 <button onClick={handleFindMatch}>Find Match</button>
             )}
             {/* add other gamemodes later */}
+            <Link href="/game/survival">survival mode (solo)</Link>
             <div>
                 <h1 className="font-bold">custom game</h1>
                 <div>

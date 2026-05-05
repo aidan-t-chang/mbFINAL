@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "bestScore" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "bestSurvivalScore" INTEGER NOT NULL DEFAULT 0;

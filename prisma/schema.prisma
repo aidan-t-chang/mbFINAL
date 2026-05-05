@@ -32,6 +32,8 @@ model User {
   timePlayed           Float        @default(0.0) // in hours?
   friends              Int          @default(0)
   mbrr                 Int          @default(1000) // mathblitz rank rating
+  bestSurvivalScore    Int          @default(0)
+  bestScore            Int          @default(0)
   
   friendshipsInitiated Friendship[] @relation("UserFriendships")
   friendshipsReceived  Friendship[] @relation("FriendFriendships")
