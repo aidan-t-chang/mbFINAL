@@ -69,8 +69,13 @@ async function login(formData: FormData) {
             return { success: false, error: "Invalid email or password" };
         }
 
+        const signature = crypto
+            .createHmac("sha256", process.env.SESSION_SECRET || "default_secret")
+            .update(user.id.toString())
+            .digest("hex");
+
         const cookieStore = await cookies();
-        cookieStore.set("sessionId", user.id.toString(), {
+        cookieStore.set("sessionId", `${user.id}.${signature}`, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
@@ -90,14 +95,25 @@ async function login(formData: FormData) {
 
 async function getCurrentUser() {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("sessionId")?.value;
-    console.log("Session ID from cookie:", sessionId);
+    const sessionCookie = cookieStore.get("sessionId")?.value;
 
-    if (!sessionId) {
+    if (!sessionCookie || !sessionCookie.includes(".")) {
         return null;
     }
 
-    const parsedId = Number(sessionId);
+    const [idStr, signature] = sessionCookie.split(".");
+    
+    // Verify signature to prevent session hijacking
+    const expectedSignature = crypto
+        .createHmac("sha256", process.env.SESSION_SECRET || "default_secret")
+        .update(idStr)
+        .digest("hex");
+
+    if (signature !== expectedSignature) {
+        return null;
+    }
+
+    const parsedId = Number(idStr);
     if (isNaN(parsedId)) {
         return null;
     }
@@ -138,6 +154,21 @@ async function getGameQuestions(roomId: string) {
 }
 
 async function cleanUpQuestions(roomId: string, questionIndex: number) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return;
+
+    // Ensure the user is an active participant in this game
+    const isPlayer = await prisma.gamePlayer.findUnique({
+        where: {
+            userId_gameId: {
+                userId: currentUser.id,
+                gameId: roomId
+            }
+        }
+    });
+
+    if (!isPlayer) return;
+
     const allQuestions = await getGameQuestions(roomId);
 
     const unusedQuestions = allQuestions.slice(questionIndex);
@@ -159,6 +190,17 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
     const user = await getCurrentUser();
     if (!user) {
         return;
+    }
+
+    // Basic sanity checks 
+    const maxPossibleScorePerQuestion = 1500 + (highestCombo * 50);
+    if (
+        score < 0 || questionsAnswered < 0 || highestCombo < 0 || 
+        score > (questionsAnswered * maxPossibleScorePerQuestion) ||
+        highestCombo > questionsAnswered
+    ) {
+        console.error(`Suspicious multiplayer score discarded for user ${user.id}`);
+        return { success: false, error: "Suspicious score detected" };
     }
 
     // score is around 70-80k for full match
@@ -376,6 +418,13 @@ export async function updateLastOnline() {
 }
 
 export async function acceptFriendRequest(userId: number, friendId: number) {
+    const currentUser = await getCurrentUser();
+    
+    // Ensure the current user is the one receiving the request
+    if (!currentUser || currentUser.id !== friendId) {
+        return { success: false, error: "Unauthorized" };
+    }
+
     try {
         await prisma.friendship.update({
             where: {
@@ -488,6 +537,17 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
     const user = await getCurrentUser();
     if (!user) {
         return { success: false, error: "Not logged in" };
+    }
+
+    // Basic sanity checks to prevent blatant script-kiddie cheating
+    const maxPossibleScorePerQuestion = 1500 + (highestCombo * 50); // generous max limit
+    if (
+        score < 0 || questionsAnswered < 0 || highestCombo < 0 || 
+        score > (questionsAnswered * maxPossibleScorePerQuestion) ||
+        highestCombo > questionsAnswered
+    ) {
+        console.error(`Suspicious survival score discarded for user ${user.id}`);
+        return { success: false, error: "Suspicious score detected" };
     }
 
     try {

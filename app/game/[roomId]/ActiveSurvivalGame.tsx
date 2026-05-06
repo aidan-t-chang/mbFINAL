@@ -28,7 +28,7 @@ export default function ActiveSurvivalGame() {
         questionStartTime.current = Date.now();
     }, [currentIndex]);
     
-    const [timeLeft, setTimeLeft] = useState(10.0); 
+    const [timeLeft, setTimeLeft] = useState(30.0); 
     const [gameOver, setGameOver] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
@@ -159,10 +159,13 @@ export default function ActiveSurvivalGame() {
                 setCombo(0);
                 setComboLevel(1);
 
+                // Instantly penalize 
+                setTimeLeft(prev => prev - 3.0); 
+
                 setIsInputDisabled(true);
                 setTimeout(() => {
                     setIsInputDisabled(false);
-                }, 1500);
+                }, 400);
             }
         }
     };
@@ -200,7 +203,9 @@ export default function ActiveSurvivalGame() {
                         <p>Score: {score}</p>
                     </div>
                     <div className="other-info">
-                        <p>Time Left: {timeLeft.toFixed(1)}s</p>
+                        <div className="w-full bg-gray-200 h-3 mt-1 mb-2 rounded-full overflow-hidden">
+                            <div className="bg-green-500 h-3 rounded-full" style={{ width: `${Math.min(100, Math.max(0, (timeLeft / 30) * 100))}%` }}></div>
+                        </div>
                         <p>Combo: {combo} (x{comboLevel.toFixed(1)})</p>
                     </div>
                 </div>
