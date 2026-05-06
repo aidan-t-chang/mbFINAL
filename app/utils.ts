@@ -1,3 +1,5 @@
+export const isDev = true;
+
 export function calculateLevel(totalExp: number) {
     let level = 0;
     let expRemaining = totalExp;

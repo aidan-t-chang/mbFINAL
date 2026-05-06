@@ -8,11 +8,15 @@ import toast from "react-hot-toast";
 import "./game.css";
 import CustomLobby from "./CustomLobby";
 import ActiveGame from "./ActiveGame";
+import ActiveSurvivalGame from "./ActiveSurvivalGame";
+import { isDev } from "../../utils";
 
 export default function Game() {
     const { roomId } = useParams();
     const searchParams = useSearchParams();
     const isMatchmaking = searchParams.get("matchmaking") === "true";
+    const gamemode = searchParams.get("gamemode");
+    const isSurvival = gamemode === "survival";
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [user, setUser] = useState<any>(null);
     const [answer, setAnswer] = useState<string | null>(null);
@@ -47,21 +51,22 @@ export default function Game() {
     }
 
     useEffect(() => {
-        if (isReady && isMatchmaking && isOwner) {
+        if (isReady && (isMatchmaking || isSurvival) && isOwner) {
             handleStartGame();
         }
-    }, [isReady, isMatchmaking, isOwner, socket]);
+    }, [isReady, isMatchmaking, isSurvival, isOwner, socket]);
 
     useEffect(() => {
         if (!user) return;
 
-        const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081";
-        const ws = new WebSocket(WS_URL);
+        const WS_URL = isDev ? "ws://localhost:8081" : process.env.NEXT_PUBLIC_WS_URL;
+        const ws = new WebSocket(WS_URL as string);
 
         ws.onopen = () => {
             ws.send(JSON.stringify({
                 type: "JOIN_ROOM",
                 roomId: roomId,
+                gamemode: gamemode,
                 user: { id: user.id, username: user.username }
             }));
         };
@@ -108,11 +113,14 @@ export default function Game() {
     }
 
     if (gameStarted) {
+        if (isSurvival) {
+            return <ActiveSurvivalGame />
+        }
         return <ActiveGame socket={socket} />
     }
 
-    if (isMatchmaking) {
-        return <p className="flex flex-col items-center justify-center h-screen">Match found! Preparing game...</p>;
+    if (isMatchmaking || isSurvival) {
+        return <p className="flex flex-col items-center justify-center h-screen">Preparing game...</p>;
     }
 
     return (

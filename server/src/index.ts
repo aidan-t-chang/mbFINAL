@@ -202,6 +202,7 @@ server.on('connection', socket => {
         if (data.type === "JOIN_ROOM") {
             const roomId = data.roomId;
             const user = data.user;
+            const gamemode = data.gamemode;
 
             let isFirstPlayer = false;
             let room = rooms.get(roomId);
@@ -212,7 +213,9 @@ server.on('connection', socket => {
                 rooms.set(roomId, room);
             }
 
-            if (room.size >= 2) {
+            const maxPlayers = gamemode === "survival" ? 1 : 2;
+
+            if (room.size >= maxPlayers) {
                 socket.send(JSON.stringify({ type: "ERROR", message: "Room is full" }));
                 return;
             }
@@ -274,7 +277,7 @@ server.on('connection', socket => {
             socket.send(JSON.stringify({ type: "SUCCESS", message: `Joined room ${roomId}` }));
 
             getRoomUpdate(roomId);
-            if (room.size === 2) {
+            if (room.size === maxPlayers) {
                 try {
                     await prisma.game.update({
                         where: { id: roomId },

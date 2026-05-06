@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getSurvivalBatch, getCurrentUser, saveSurvivalScore } from "../../actions";
+import { getSurvivalBatch, getCurrentUser, saveSurvivalScore, cleanUpQuestions } from "../../actions";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ActiveSurvivalGame() {
@@ -89,13 +89,14 @@ export default function ActiveSurvivalGame() {
 
     useEffect(() => {
         if (gameOver) {
-            saveSurvivalScore(score, questionsAnswered).then(res => {
+            saveSurvivalScore(score, questionsAnswered, maxCombo).then(res => {
                 if (res.success) {
                     console.log("Survival score saved!", res);
                 }
             });
+            cleanUpQuestions(roomId as string, currentIndex);
         }
-    }, [gameOver]); // will run when gameOver turns true
+    }, [gameOver, score, questionsAnswered, maxCombo, roomId, currentIndex]);
 
     useEffect(() => {
         async function fetchMoreQuestions() {
@@ -115,7 +116,7 @@ export default function ActiveSurvivalGame() {
     // Protect against non-auth or loading
     if (!user && !isUserLoading) router.push("/login");
     if (isUserLoading || questions.length === 0 || areQuestionsLoading) {
-        return <div className="flex h-screen items-center justify-center text-white">Loading Survival Batch...</div>;
+        return <div className="flex h-screen items-center justify-center">Loading Survival Batch...</div>;
     }
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,21 +169,21 @@ export default function ActiveSurvivalGame() {
 
     if (gameOver) {
         return (
-            <div className="flex flex-col items-center justify-center h-screen space-y-4 text-white">
-                <h1 className="text-5xl font-bold text-red-500 mb-4 animate-pulse">TIME'S UP!</h1>
-                <h2 className="text-3xl">Final Score: {score}</h2>
-                <p>Questions Answered: {questionsAnswered}</p>
-                <p>Max Combo: {maxCombo}</p>
-                <div className="mt-8 flex gap-4">
+            <div className="game-over-screen text-center">
+                <h1 className="text-4xl font-bold mb-6">Game Over</h1>
+                <p>your score: {score}</p>
+                <p>you answered {questionsAnswered} questions</p>
+                <p>max combo: {maxCombo}</p>
+                <div className="mt-8 flex gap-4 justify-center">
                     <button 
                         onClick={() => router.push("/play")}
-                        className="px-6 py-3 bg-[#4287f5] hover:bg-[#346ac2] transition-colors rounded font-bold"
+                        className="game-button font-bold"
                     >
                         Back to Menu
                     </button>
                     <button 
                         onClick={() => window.location.reload()}
-                        className="px-6 py-3 bg-[#2cb04b] hover:bg-[#208638] transition-colors rounded font-bold"
+                        className="game-button font-bold"
                     >
                         Play Again
                     </button>
@@ -192,42 +193,32 @@ export default function ActiveSurvivalGame() {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen text-white relative">
-            <div className="absolute top-10 flex w-full max-w-4xl justify-between px-8 text-2xl font-bold">
-                <div>
-                    <div>Score: {score}</div>
-                    <div className="text-sm">Combo: {combo} (x{comboLevel.toFixed(1)})</div>
+        <div className="active-game-container flex flex-col items-center justify-center p-8 text-center h-screen">
+            <div className="active-game-container">
+                <div className="game-header">
+                    <div className="score-board">
+                        <p>Score: {score}</p>
+                    </div>
+                    <div className="other-info">
+                        <p>Time Left: {timeLeft.toFixed(1)}s</p>
+                        <p>Combo: {combo} (x{comboLevel.toFixed(1)})</p>
+                    </div>
                 </div>
-                <div>Question: {currentIndex + 1}</div>
             </div>
 
-            {/* High Precision Timer */}
-            <div 
-                className="text-8xl font-black mb-12 tabular-nums transition-colors duration-100" 
-                style={{ color: timeLeft <= 3 ? '#ef4444' : timeLeft <= 5 ? '#eab308' : 'white' }}
-            >
-                {timeLeft.toFixed(1)}s
+            <div className="questions-container">
+                <h1 className="cur-question">{questions[currentIndex]?.question}</h1>
+                <input 
+                    type="text"
+                    value={currentInput}
+                    onChange={handleInput}
+                    autoFocus
+                    className="answer-input text-center"
+                    style={{ opacity: isInputDisabled ? 0.5 : 1,
+                        backgroundColor: isInputDisabled ? "#f8d7da" : "white",
+                    }}
+                />
             </div>
-
-            {/* Question Text */}
-            <div className="text-7xl font-mono mb-12">
-                {questions[currentIndex]?.question} = ?
-            </div>
-
-            {/* Input Box */}
-            <input
-                type="text"
-                autoFocus
-                value={currentInput}
-                onChange={handleInput}
-                disabled={isInputDisabled}
-                style={{ 
-                    opacity: isInputDisabled ? 0.5 : 1,
-                    backgroundColor: isInputDisabled ? "#f8d7da" : "white"
-                }}
-                className="text-5xl p-6 text-center text-black rounded-xl w-64 shadow-[0_0_20px_rgba(255,255,255,0.2)] focus:outline-none focus:ring-4 focus:ring-[#4287f5]"
-                placeholder="?"
-            />
         </div>
     );
 }

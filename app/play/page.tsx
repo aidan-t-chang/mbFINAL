@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getCurrentUser } from "../actions";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { isDev } from "../utils";
 
 const generateRoomId = () => Math.random().toString(36).substring(2, 8);
 export default function FindMatchPage() {
@@ -29,7 +30,7 @@ export default function FindMatchPage() {
         queryKey: ["queueSize"],
         queryFn: async () => {
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+                const API_URL = isDev ? "http://localhost:8081" : process.env.NEXT_PUBLIC_API_URL;
                 const res = await fetch(`${API_URL}/api/queue-size`);
                 if (!res.ok) {
                     return 0;
@@ -63,8 +64,8 @@ export default function FindMatchPage() {
         if (!user) return;
 
         setIsSearching(true);
-        const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081";
-        const ws = new WebSocket(WS_URL);
+        const WS_URL = isDev ? "ws://localhost:8081" : process.env.NEXT_PUBLIC_WS_URL;
+        const ws = new WebSocket(WS_URL as string);
 
         ws.onopen = () => {
             ws.send(JSON.stringify({
@@ -132,7 +133,7 @@ export default function FindMatchPage() {
                 <button onClick={handleFindMatch}>Find Match</button>
             )}
             {/* add other gamemodes later */}
-            <Link href="/game/survival">survival mode (solo)</Link>
+            <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (solo)</button>
             <div>
                 <h1 className="font-bold">custom game</h1>
                 <div>

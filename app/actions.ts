@@ -484,7 +484,7 @@ export async function getSurvivalBatch(roomId: string, batchSize: number = 50) {
     }
 }
 
-export async function saveSurvivalScore(score: number, questionsAnswered: number) {
+export async function saveSurvivalScore(score: number, questionsAnswered: number, highestCombo: number) {
     const user = await getCurrentUser();
     if (!user) {
         return { success: false, error: "Not logged in" };
@@ -500,7 +500,10 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
             ? Math.max(currentUserData.bestSurvivalScore, score) 
             : score;
 
-        const expGained = Math.floor(score / 10);
+        const baseExp = Math.floor(score / 10);
+        const comboBonus = highestCombo * 50;
+        const qAnsweredBonus = questionsAnswered * 25;
+        const expGained = baseExp + comboBonus + qAnsweredBonus;
         
         await prisma.user.update({
             where: { id: user.id },
