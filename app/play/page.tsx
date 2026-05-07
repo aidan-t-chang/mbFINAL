@@ -120,7 +120,7 @@ export default function FindMatchPage() {
             <h1 className="font-bold">competitive</h1>
             <div>
                 <p>{user.username}</p>
-                <p>{user.rank} ({user.mbrr} mbrr)</p>
+                <p>{user.rank} ({user.mbrr.toLocaleString()} mbrr)</p>
             </div>
             { isSearching ? (
                 <div>
@@ -132,8 +132,6 @@ export default function FindMatchPage() {
             ) : (
                 <button onClick={handleFindMatch}>Find Match</button>
             )}
-            {/* add other gamemodes later */}
-            <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (solo)</button>
             <div>
                 <h1 className="font-bold">custom game</h1>
                 <div>
@@ -150,6 +148,8 @@ export default function FindMatchPage() {
                     <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
                 </div>
             </div>
+            <p className="font-bold mt-4">solo modes</p>
+            <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
             <Link href="/">Back</Link>
         </div>
     );

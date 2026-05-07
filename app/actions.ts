@@ -224,6 +224,8 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
     const incLevel = newLevelData.level - oldLevelData.level;
     // not even going to worry about glicko2 rating implementation for right now
 
+    const timePlayed = averageAnswerTime * questionsAnswered / 3600; // convert seconds to hours
+
     try {
         await prisma.gamePlayer.update({
             where: {
@@ -255,6 +257,7 @@ async function saveGameResults(roomId: string, score: number, isWinner: boolean,
                 ...(incLevel > 0 && { level: { increment: incLevel } }),
                 ...(isWinner ? { wins: { increment: 1 } } : { losses: { increment: 1 } }),
                 avgAnswerTime: user.avgAnswerTime ? ((user.avgAnswerTime * (user.gamesPlayed) + averageAnswerTime) / (user.gamesPlayed + 1)) : averageAnswerTime,
+                timePlayed: { increment: timePlayed }
              }
         });
 

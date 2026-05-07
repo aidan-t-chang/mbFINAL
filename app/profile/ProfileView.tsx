@@ -18,17 +18,19 @@ export default function ProfileView({ profileUser, isOwnProfile, currentUserFrie
         }
     };
 
+    const newAvgAnswerTime = profileUser.avgAnswerTime ? (profileUser.avgAnswerTime / 1000).toFixed(2) : "N/A";
+
     return (
         <div className="profile-view flex flex-col items-center justify-center h-screen text-center">
             <h1>{profileUser.username}'s Profile</h1><br></br>
             <p>{numFriends} friends</p>
             <p>{profileUser.timePlayed} hours</p><br></br>
-            <p>Rank: {profileUser.rank} ({profileUser.mbrr}mbrr)</p><br></br>
+            <p>Rank: {profileUser.rank} ({profileUser.mbrr.toLocaleString()} mbrr)</p><br></br>
             <p>Level {profileUser.level} ({profileUser.totalExp.toLocaleString()} total xp)</p><br></br>
             <p>{profileUser.wins} wins / {profileUser.losses} losses</p><br></br>
             <p>{profileUser.gamesPlayed} games played</p>
             <p>Winrate: {winrate.toFixed(2)}%</p><br></br>
-            <p>Average Answer Time: {profileUser.avgAnswertime}ms</p>
+            <p>Average Answer Time: {newAvgAnswerTime}s</p>
 
             {isOwnProfile ? (
                 <div>
