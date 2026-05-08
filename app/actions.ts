@@ -584,4 +584,68 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
     }
 }
 
+export async function generateEzAddition(roomId: string, numQuestions: number) {
+    const allQuestions = [];
+    let counter: number = 0;
+    while (counter < numQuestions) {
+        const num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+        const num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+
+        const questionText = `${num1} + ${num2}`;
+        const answer = (num1 + num2);
+
+        allQuestions.push({
+            gameId: roomId,
+            question: questionText,
+            correctAnswer: answer
+        });
+        counter++;
+    }
+    return allQuestions;
+}
+
+export async function saveRaceScore(roomId: string, time: number, questionIndex: number) {
+    const user = await getCurrentUser();
+    if (!user) {
+        return;
+    }
+
+    const timeInSeconds = time / 1000; // convert ms to seconds
+
+    let score = Math.max(0, 10000 - timeInSeconds * 100);
+    score += questionIndex * 25; // bonus for each question answered
+
+    const bestRaceTime = user.bestRaceTime ? Math.min(user.bestRaceTime, timeInSeconds) : timeInSeconds;
+
+    try {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { totalExp: { increment: score },
+                gamesPlayed: { increment: 1 },
+                bestRaceTime: bestRaceTime
+            }
+        })
+
+        await prisma.game.update({
+            where: { id: roomId },
+            data: { status: "FINISHED" }
+        })
+
+        await prisma.gamePlayer.update({
+            where: {
+                userId_gameId: {
+                    userId: user.id,
+                    gameId: roomId
+                }
+            },
+            data: {
+                score: score,
+            }
+        });
+    } catch (e) {
+        console.error("Error saving race score:", e);
+    }
+}
+
+
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };

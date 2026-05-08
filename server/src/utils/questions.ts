@@ -82,23 +82,3 @@ export async function generateBoth(roomId: string, numQuestions: number) {
     }
     return allQuestions;
 }
-
-export async function generateEzAddition(roomId: string, numQuestions: number) {
-    const allQuestions = [];
-    let counter: number = 0;
-    while (counter < numQuestions) {
-        const num1 = Math.floor(Math.random() * 10) + 1; // 1-10
-        const num2 = Math.floor(Math.random() * 10) + 1; // 1-10
-
-        const questionText = `${num1} + ${num2}`;
-        const answer = (num1 + num2);
-
-        allQuestions.push({
-            gameId: roomId,
-            question: questionText,
-            correctAnswer: answer
-        });
-        counter++;
-    }
-    return allQuestions;
-}
