@@ -1,4 +1,4 @@
-export const isDev = true;
+export const isDev = false;
 
 export function calculateLevel(totalExp: number) {
     let level = 0;

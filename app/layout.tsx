@@ -34,6 +34,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </Providers>
+        <p className="fixed bottom-4 right-4 text-sm text-muted-foreground">Version 0.0.1</p>
       </body>
     </html>
   );
