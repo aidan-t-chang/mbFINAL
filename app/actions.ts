@@ -135,6 +135,7 @@ async function getCurrentUser() {
             avgAnswerTime: true,
             friends: true,
             bestSurvivalScore: true,
+            bestRaceTime: true,
         }
     });
 
@@ -536,7 +537,7 @@ export async function getSurvivalBatch(roomId: string, batchSize: number = 50) {
     }
 }
 
-export async function saveSurvivalScore(score: number, questionsAnswered: number, highestCombo: number) {
+export async function saveSurvivalScore(score: number, questionsAnswered: number, highestCombo: number, roomId: string) {
     const user = await getCurrentUser();
     if (!user) {
         return { success: false, error: "Not logged in" };
@@ -576,6 +577,20 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
                 gamesPlayed: { increment: 1 }
             }
         });
+
+        // await prisma.gamePlayer.update({
+        //     where: {
+        //         userId_gameId: {
+        //             userId: user.id,
+
+        //         }
+        //     }
+        // })
+
+        await prisma.game.update({
+            where: { id: roomId },
+            data: { status: "FINISHED" }
+        })
 
         return { success: true, newBest, expGained };
     } catch (e) {
@@ -645,6 +660,8 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
     } catch (e) {
         console.error("Error saving race score:", e);
     }
+
+    return { success: true };
 }
 
 

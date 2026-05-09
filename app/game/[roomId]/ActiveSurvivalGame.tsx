@@ -89,7 +89,7 @@ export default function ActiveSurvivalGame() {
 
     useEffect(() => {
         if (gameOver) {
-            saveSurvivalScore(score, questionsAnswered, maxCombo).then(res => {
+            saveSurvivalScore(score, questionsAnswered, maxCombo, roomId as string).then(res => {
                 if (res.success) {
                     console.log("Survival score saved!", res);
                 }

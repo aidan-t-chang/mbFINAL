@@ -41,5 +41,29 @@ export default function ActiveRaceGame() {
         }
     }, [initialQuestions]);
 
+    useEffect(() => {
+        if (gameOver) {
+            saveRaceScore(roomId as string, timeTaken, questionsAnswered).then(res => {
+                if (res?.success) {
+                    console.log("Race score saved", res);
+                }
+            });
+            cleanUpQuestions(roomId as string, currentIndex);
+        }
+    }, [gameOver, roomId, currentIndex]);
 
-}
+    useEffect(() => {
+        async function fetchMoreQuestions() {
+            // Uninterrupted gameplay: If we are close to running out (10 left), fetch 50 more!
+            if (questions.length > 0 && currentIndex >= questions.length - 10 && !isFetchingMore) {
+                setIsFetchingMore(true);
+                const moreQs = await generateEzAddition(roomId as string, 50);
+                if (moreQs) {
+                    setQuestions(prev => [...prev, ...(moreQs as any)]);
+                }
+                setIsFetchingMore(false);
+            }
+        }
+        fetchMoreQuestions();
+    }, [currentIndex, questions.length, roomId, isFetchingMore]);
+};
