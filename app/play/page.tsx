@@ -130,12 +130,12 @@ export default function FindMatchPage() {
                     <button onClick={handleCancel}>Cancel</button>
                 </div>
             ) : (
-                <button onClick={handleFindMatch}>Find Match</button>
+                <button className="border border-solid border-white-300 cursor-pointer p-2" onClick={handleFindMatch}>Find Match</button>
             )}
             <div>
-                <h1 className="font-bold">custom game</h1>
+                <h1 className="font-bold m-2">custom game</h1>
                 <div>
-                    <Link href={`/game/${roomId}`}>create new game</Link>
+                    <Link className="border border-solid border-white-300 cursor-pointer p-2" href={`/game/${roomId}`}>create new game</Link>
                 </div>
                 <div>
                     <input 
@@ -145,13 +145,13 @@ export default function FindMatchPage() {
                     onChange={(e) => setJoinRoomId(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleJoinRoom()}
                     />
-                    <button onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
+                    <button className="border border-solid border-white-300 cursor-pointer p-2 mt-3" onClick={handleJoinRoom} disabled={!joinRoomId}>join game</button>
                 </div>
             </div>
             <p className="font-bold mt-4">solo modes</p>
-            <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
-            <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=race`)}>race mode</button>
-            <Link href="/">Back</Link>
+            <button className="border border-solid border-white-300 cursor-pointer p-2" onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
+            {/* <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=race`)}>race mode</button> */}
+            <Link className="border border-solid border-white-300 cursor-pointer p-2 mt-1" href="/">Back</Link>
         </div>
     );
 }
