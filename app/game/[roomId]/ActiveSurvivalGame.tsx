@@ -184,12 +184,6 @@ export default function ActiveSurvivalGame() {
                     >
                         Back to Menu
                     </button>
-                    <button 
-                        onClick={() => window.location.reload()}
-                        className="game-button font-bold"
-                    >
-                        Play Again
-                    </button>
                 </div>
             </div>
         );
