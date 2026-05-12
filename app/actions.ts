@@ -569,6 +569,9 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
         const qAnsweredBonus = questionsAnswered * 25;
         const expGained = baseExp + comboBonus + qAnsweredBonus;
         
+        const oldTotalExp = user.totalExp || 0;
+        const newTotalExp = oldTotalExp + expGained;
+
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -592,7 +595,7 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
             data: { status: "FINISHED" }
         })
 
-        return { success: true, newBest, expGained };
+        return { success: true, newBest, expGained, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving survival score:", e);
         return { success: false, error: "Failed to save score" };
@@ -627,10 +630,13 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
 
     const timeInSeconds = time / 1000; // convert ms to seconds
 
-    let score = Math.max(0, 10000 - timeInSeconds * 100);
+    let score = 15000 - Math.floor(time / 10);
     score += questionIndex * 25; // bonus for each question answered
+    score = Math.max(0, score);
 
     const bestRaceTime = user.bestRaceTime ? Math.min(user.bestRaceTime, timeInSeconds) : timeInSeconds;
+    const oldTotalExp = user.totalExp || 0;
+    const newTotalExp = oldTotalExp + score;
 
     try {
         await prisma.user.update({
@@ -657,11 +663,12 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
                 score: score,
             }
         });
+        
+        return { success: true, expGained: score, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving race score:", e);
+        return { success: false, error: e };
     }
-
-    return { success: true };
 }
 
 

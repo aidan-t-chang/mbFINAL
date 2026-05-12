@@ -25,6 +25,7 @@ export default function ActiveRaceGame() {
     const [timeTaken, setTimeTaken] = useState(0);
     const [gameStarted, setGameStarted] = useState(false);
     const [countdown, setCountdown] = useState(3);
+    const [xpData, setXpData] = useState<{ expGained: number, oldTotalExp: number, newTotalExp: number } | null>(null);
 
     const { data: user, isLoading: isUserLoading } = useQuery({
         queryKey: ["currentUser"],
@@ -73,11 +74,16 @@ export default function ActiveRaceGame() {
             saveRaceScore(roomId as string, timeTaken, questionsAnswered).then(res => {
                 if (res?.success) {
                     console.log("Race score saved", res);
+                    setXpData({
+                        expGained: res.expGained as number,
+                        oldTotalExp: res.oldTotalExp as number,
+                        newTotalExp: res.newTotalExp as number,
+                    });
                 }
             });
             cleanUpQuestions(roomId as string, currentIndex);
         }
-    }, [gameOver, roomId, currentIndex]);
+    }, [gameOver, roomId, currentIndex, questionsAnswered, timeTaken]);
 
     useEffect(() => {
         async function fetchMoreQuestions() {
@@ -152,10 +158,18 @@ export default function ActiveRaceGame() {
                 <p>your time: {(timeTaken / 1000).toFixed(2)}s</p>
                 <p>base xp: {baseXp}</p>
 
-                {/* show xp bar here too */}
                 <p>question bonus: {questionBonus}</p>
                 <p>total xp: {xp}</p>
-                <Link href="/">Return to Lobby</Link>
+                
+                {xpData && user ? (
+                    <XpBar user={user} xpData={xpData} />
+                ) : (
+                    <p className="text-sm">calculating xp...</p>
+                )}
+
+                <div className="mt-8 flex gap-4 justify-center">
+                    <Link href="/" className="game-button font-bold">Return to Lobby</Link>
+                </div>
             </div>
         );
     }

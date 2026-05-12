@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getSurvivalBatch, getCurrentUser, saveSurvivalScore, cleanUpQuestions } from "../../actions";
 import { useQuery } from "@tanstack/react-query";
+import XpBar from "./XpBar";
 
 export default function ActiveSurvivalGame() {
     const { roomId } = useParams();
@@ -31,6 +32,8 @@ export default function ActiveSurvivalGame() {
     const [timeLeft, setTimeLeft] = useState(30.0); 
     const [gameOver, setGameOver] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
+    const [timeSurvived, setTimeSurvived] = useState(0);
+    const [xpData, setXpData] = useState<{ expGained: number, oldTotalExp: number, newTotalExp: number } | null>(null);
 
     const { data: user, isLoading: isUserLoading } = useQuery({
         queryKey: ["currentUser"],
@@ -75,6 +78,7 @@ export default function ActiveSurvivalGame() {
                 // End game condition
                 if (newTime <= 0) {
                     setGameOver(true);
+                    setTimeSurvived(totalTimeElapsedInSeconds);
                     return 0;
                 }
                 return newTime;
@@ -92,6 +96,11 @@ export default function ActiveSurvivalGame() {
             saveSurvivalScore(score, questionsAnswered, maxCombo, roomId as string).then(res => {
                 if (res.success) {
                     console.log("Survival score saved!", res);
+                    setXpData({
+                        expGained: res.expGained as number,
+                        oldTotalExp: res.oldTotalExp as number,
+                        newTotalExp: res.newTotalExp as number,
+                    });
                 }
             });
             cleanUpQuestions(roomId as string, currentIndex);
@@ -171,12 +180,24 @@ export default function ActiveSurvivalGame() {
     };
 
     if (gameOver) {
+        let baseXp = Math.floor(score / 10);
+        let questionBonus = questionsAnswered * 25;
+        let timeSurvivedBonus = Math.floor(timeSurvived * 10);
         return (
             <div className="game-over-screen text-center">
                 <h1 className="text-4xl font-bold mb-6">Game Over</h1>
-                <p>your score: {score}</p>
-                <p>you answered {questionsAnswered} questions</p>
-                <p>max combo: {maxCombo}</p>
+                <p>your score: {score} ({baseXp}xp)</p>
+                <p>you answered {questionsAnswered} questions ({questionBonus}xp bonus)</p>
+                <p>you survived for {timeSurvived} seconds ({timeSurvivedBonus}xp bonus)</p>
+                
+                <p>total xp gained: {baseXp + questionBonus + timeSurvivedBonus}xp</p>
+                
+                {xpData && user ? (
+                    <XpBar user={user} xpData={xpData} />
+                ) : (
+                    <p className="text-sm">calculating xp...</p>
+                )}
+
                 <div className="mt-8 flex gap-4 justify-center">
                     <button 
                         onClick={() => router.push("/play")}
