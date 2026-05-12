@@ -481,11 +481,11 @@ export async function searchUsers(searchTerm: string) {
     }
 }
 
-export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" | "bestSurvivalScore" = "mbrr") {
+export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" | "bestSurvivalScore" | "bestRaceTime" = "mbrr") {
     try {
         const topUsers = await prisma.user.findMany({
             take: limit,
-            orderBy: { [byWhat]: "desc" },
+            orderBy: { [byWhat]: byWhat === "bestRaceTime" ? "asc" : "desc" },
             select: {
                 id: true,
                 username: true,
@@ -494,6 +494,7 @@ export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "total
                 level: true,
                 totalExp: true,
                 bestSurvivalScore: true,
+                bestRaceTime: true,
             }
         })
         return { success: true, users: topUsers };

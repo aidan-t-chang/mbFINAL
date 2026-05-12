@@ -7,6 +7,7 @@ interface LeaderboardUser {
     mbrr: number;
     totalExp: number;
     bestSurvivalScore?: number;
+    bestRaceTime: number;
 }
 
 interface LeaderboardItemProps {
@@ -14,7 +15,7 @@ interface LeaderboardItemProps {
     place: number;
 }
 
-export default function LeaderboardItem({ user, place, version }: LeaderboardItemProps & { version: "mbrr" | "totalExp" | "bestSurvivalScore" }) {
+export default function LeaderboardItem({ user, place, version }: LeaderboardItemProps & { version: "mbrr" | "totalExp" | "bestSurvivalScore" | "bestRaceTime" }) {
     return (
         <div className="leaderboard-container flex justify-between w-96 p-2 border-b">
             <div>
@@ -28,8 +29,9 @@ export default function LeaderboardItem({ user, place, version }: LeaderboardIte
             <div>
                 <span className="leaderboard-rank text-gray-500">
                     {version === "mbrr" ? user.mbrr.toLocaleString() + " MBRR" : 
-                     version === "totalExp" ? user.totalExp.toLocaleString() + " XP" :
-                     (user.bestSurvivalScore || 0).toLocaleString()}
+                     version === "totalExp" ? user.totalExp.toLocaleString() + " XP" : 
+                     version === "bestSurvivalScore" ? (user.bestSurvivalScore || 0).toLocaleString() + " points" :
+                     (user.bestRaceTime || 0).toLocaleString() + " seconds"}
                 </span>
             </div>
         </div>
