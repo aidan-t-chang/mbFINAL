@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createAccount, login, logout } from "../actions";
 import { getCurrentUser } from "../actions";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from 'react-hot-toast';
 import "./login.css";
 
@@ -19,6 +19,7 @@ export default function LoginPage() {
 
     const [userLogin, setuserLogin] = useState(true);
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     const handleSubmit = async (formData: FormData) => {
         if (userLogin) {
@@ -26,7 +27,8 @@ export default function LoginPage() {
 
             if (result.success) {
                 toast.success("Logged in successfully!");
-                router.push("/");
+                await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+                router.push("/play");
             } else {
                 toast.error("Error logging in: " + result.error);
                 console.log(result.error);

@@ -199,12 +199,7 @@ export default function ActiveSurvivalGame() {
                 )}
 
                 <div className="mt-8 flex gap-4 justify-center">
-                    <button 
-                        onClick={() => router.push("/play")}
-                        className="game-button font-bold"
-                    >
-                        Back to Menu
-                    </button>
+                    <button onClick={() => router.push("/play")} className="game-button font-bold">Back to Menu</button>
                 </div>
             </div>
         );

@@ -485,6 +485,7 @@ export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "total
     try {
         const topUsers = await prisma.user.findMany({
             take: limit,
+            where: byWhat === "bestRaceTime" ? { bestRaceTime: { gt: 0 } } : undefined,
             orderBy: { [byWhat]: byWhat === "bestRaceTime" ? "asc" : "desc" },
             select: {
                 id: true,

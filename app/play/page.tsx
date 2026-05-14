@@ -150,7 +150,7 @@ export default function FindMatchPage() {
             </div>
             <p className="font-bold mt-4">solo modes</p>
             <button className="border border-solid border-white-300 cursor-pointer p-2" onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
-            {/* <button onClick={() => router.push(`/game/${generateRoomId()}?gamemode=race`)}>race mode</button> */}
+            <button className="border border-solid border-white-300 cursor-pointer p-2 mt-2"onClick={() => router.push(`/game/${generateRoomId()}?gamemode=race`)}>race mode</button>
             <Link className="border border-solid border-white-300 cursor-pointer p-2 mt-1" href="/">Back</Link>
         </div>
     );

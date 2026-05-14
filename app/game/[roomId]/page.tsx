@@ -9,6 +9,7 @@ import "./game.css";
 import CustomLobby from "./CustomLobby";
 import ActiveGame from "./ActiveGame";
 import ActiveSurvivalGame from "./ActiveSurvivalGame";
+import ActiveRaceGame from "./ActiveRaceGame";
 import { isDev } from "../../utils";
 
 export default function Game() {
@@ -17,9 +18,9 @@ export default function Game() {
     const isMatchmaking = searchParams.get("matchmaking") === "true";
     const gamemode = searchParams.get("gamemode");
     const isSurvival = gamemode === "survival";
+    const isRace = gamemode === "race";
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [user, setUser] = useState<any>(null);
-    const [answer, setAnswer] = useState<string | null>(null);
     const [players, setPlayers] = useState<{ id: string, username: string}[]>([]);
     const [isReady, setIsReady] = useState(false);
     const router = useRouter();
@@ -51,13 +52,22 @@ export default function Game() {
     }
 
     useEffect(() => {
-        if (isReady && (isMatchmaking || isSurvival) && isOwner) {
+        if (isSurvival || isRace) {
+            setGameStarted(true);
+            return;
+        }
+
+        if (isReady && isMatchmaking && isOwner) {
             handleStartGame();
         }
-    }, [isReady, isMatchmaking, isSurvival, isOwner, socket]);
+    }, [isReady, isMatchmaking, isSurvival, isRace, isOwner, socket]);
 
     useEffect(() => {
         if (!user) return;
+
+        if (isSurvival || isRace) {
+            return;
+        }
 
         const WS_URL = isDev ? "ws://localhost:8081" : process.env.NEXT_PUBLIC_WS_URL;
         const ws = new WebSocket(WS_URL as string);
@@ -92,7 +102,7 @@ export default function Game() {
         return () => {
             ws.close();
         }
-    }, [roomId, user]);
+    }, [roomId, user, isSurvival, isRace, gamemode]);
 
     useEffect(() => {
         async function fetchUser() {
@@ -116,10 +126,13 @@ export default function Game() {
         if (isSurvival) {
             return <ActiveSurvivalGame />
         }
+        if (isRace) {
+            return <ActiveRaceGame />
+        }
         return <ActiveGame socket={socket} />
     }
 
-    if (isMatchmaking || isSurvival) {
+    if (isMatchmaking) {
         return <p className="flex flex-col items-center justify-center h-screen">Preparing game...</p>;
     }
 
