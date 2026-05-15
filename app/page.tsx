@@ -54,6 +54,7 @@ function Home() {
           <Link href="/friends">friends</Link><br></br>
           <Link href="/leaderboard">leaderboard</Link><br></br>
           <Link href="/profile">profile</Link><br></br>
+          {/* <Link href= {`/records/${user.username}`}>past games</Link><br></br> */}
           <Link href="/settings">settings</Link><br></br>
           {user && (
             <button onClick={handleLogout}>log out</button>

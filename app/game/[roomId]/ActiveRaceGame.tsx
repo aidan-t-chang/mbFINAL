@@ -35,7 +35,7 @@ export default function ActiveRaceGame() {
     // fetch first 50 questions
     const { data: initialQuestions, isLoading: areQuestionsLoading } = useQuery({
         queryKey: ["raceQuestions", roomId],
-        queryFn: () => generateEzAddition(roomId as string, 50),
+        queryFn: () => generateEzAddition(roomId as string, 20),
         enabled: !!roomId,
     });
 
@@ -81,9 +81,8 @@ export default function ActiveRaceGame() {
                     });
                 }
             });
-            cleanUpQuestions(roomId as string, currentIndex);
         }
-    }, [gameOver, roomId, currentIndex, questionsAnswered, timeTaken]);
+    }, [gameOver, roomId, questionsAnswered, timeTaken]);
 
     useEffect(() => {
         async function fetchMoreQuestions() {

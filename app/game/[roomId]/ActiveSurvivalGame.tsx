@@ -103,9 +103,8 @@ export default function ActiveSurvivalGame() {
                     });
                 }
             });
-            cleanUpQuestions(roomId as string, currentIndex);
         }
-    }, [gameOver, score, questionsAnswered, maxCombo, roomId, currentIndex]);
+    }, [gameOver, score, maxCombo, questionsAnswered, roomId]);
 
     useEffect(() => {
         async function fetchMoreQuestions() {

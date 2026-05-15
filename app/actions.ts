@@ -528,10 +528,8 @@ export async function getSurvivalBatch(roomId: string, batchSize: number = 50) {
     }
 
     try {
-        await prisma.question.createMany({
-            data: newQuestions
-        });
-
+        // We aren't creating them in DB for survival mode anymore to dodge gameId constraint
+        // when a Game doesn't exist for it.
         return newQuestions;
     } catch (e) {
         console.error("Error creating survival questions:", e);
@@ -592,11 +590,6 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
         //     }
         // })
 
-        await prisma.game.update({
-            where: { id: roomId },
-            data: { status: "FINISHED" }
-        })
-
         return { success: true, newBest, expGained, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving survival score:", e);
@@ -649,23 +642,6 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
             }
         })
 
-        await prisma.game.update({
-            where: { id: roomId },
-            data: { status: "FINISHED" }
-        })
-
-        await prisma.gamePlayer.update({
-            where: {
-                userId_gameId: {
-                    userId: user.id,
-                    gameId: roomId
-                }
-            },
-            data: {
-                score: score,
-            }
-        });
-        
         return { success: true, expGained: score, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving race score:", e);
@@ -673,5 +649,44 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
     }
 }
 
+export async function getUserHistory(username: string, skip: number = 0, take: number = 20) {
+    try {
+        const history = await prisma.gamePlayer.findMany({
+            where: {
+                user: { username }
+            },
+            orderBy: {
+                joinedAt: 'desc'
+            },
+            skip,
+            take,
+            include: {
+                game: {
+                    include: {
+                        questions: true,
+                        players: {
+                            include: {
+                                user: {
+                                    select: { username: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const totalCount = await prisma.gamePlayer.count({
+            where: {
+                user: { username }
+            }
+        });
+
+        return { success: true, history, totalCount };
+    } catch (e) {
+        console.error("Error fetching user history:", e);
+        return { success: false, error: "Error fetching user history" };
+    }
+}
 
 export { createAccount, login, getCurrentUser, logout, getGameQuestions, cleanUpQuestions, saveGameResults, getUserByUsername, sendFriendRequest };
