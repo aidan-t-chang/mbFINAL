@@ -30,7 +30,7 @@ export default function LeaderboardItem({ user, place, version }: LeaderboardIte
                 <span className="leaderboard-rank text-gray-500">
                     {version === "mbrr" ? user.mbrr.toLocaleString() + " MBRR" : 
                      version === "totalExp" ? user.totalExp.toLocaleString() + " XP" : 
-                     version === "bestSurvivalScore" ? (user.bestSurvivalScore || 0).toLocaleString() + " points" :
+                     version === "bestSurvivalScore" ? (user.bestSurvivalScore || 0).toLocaleString() + " seconds" :
                      (user.bestRaceTime || 0).toLocaleString() + " seconds"}
                 </span>
             </div>

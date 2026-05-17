@@ -34,7 +34,7 @@ export default function RootLayout({
           {children}
           <Toaster />
         </Providers>
-        <p className="fixed bottom-4 right-4 text-sm text-muted-foreground">Pre-Alpha v0.0.2</p>
+        <p className="fixed bottom-4 right-4 text-sm text-muted-foreground">Pre-Alpha v0.1.2</p>
       </body>
     </html>
   );

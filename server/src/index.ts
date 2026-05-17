@@ -237,7 +237,7 @@ server.on('connection', socket => {
                         data: {
                             id: roomId,
                             status: "WAITING",
-                            type: "standard" // change this later
+                            type: gamemode || "standard" // apply the gamemode from client
                         }
                     });
                 } catch (e) {

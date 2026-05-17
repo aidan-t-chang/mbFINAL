@@ -149,8 +149,8 @@ export default function FindMatchPage() {
                 </div>
             </div>
             <p className="font-bold mt-4">solo modes</p>
-            <button className="border border-solid border-white-300 cursor-pointer p-2" onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
             <button className="border border-solid border-white-300 cursor-pointer p-2 mt-2"onClick={() => router.push(`/game/${generateRoomId()}?gamemode=race`)}>race mode (best time: {user.bestRaceTime} seconds)</button>
+            <button className="border border-solid border-white-300 cursor-pointer p-2" onClick={() => router.push(`/game/${generateRoomId()}?gamemode=survival`)}>survival mode (best score: {user.bestSurvivalScore.toLocaleString()})</button>
             <Link className="border border-solid border-white-300 cursor-pointer p-2 mt-1" href="/">Back</Link>
         </div>
     );

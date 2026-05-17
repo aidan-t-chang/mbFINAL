@@ -10,7 +10,7 @@ type GameRecordsItemProps = {
 export default function GameRecordsItem({ record, username }: GameRecordsItemProps) {
     const [showQuestions, setShowQuestions] = useState(false);
     
-    const { game, score, isWinner, joinedAt } = record;
+    const { game, score, isWinner, joinedAt, time_race, time_survival } = record;
     const opponents = game.players.filter((p: any) => p.user.username !== username);
 
     const isSoloMode = game.type === "race" || game.type === "survival";
@@ -29,7 +29,15 @@ export default function GameRecordsItem({ record, username }: GameRecordsItemPro
                     <p className="text-sm opacity-80">
                         {new Date(joinedAt).toLocaleDateString()} at {new Date(joinedAt).toLocaleTimeString()}
                     </p>
-                    <p className="mt-2">Score: <span className="font-bold">{score}</span></p>
+                    <p className="mt-2">
+                        {game.type === "race" ? (
+                            <>Time: <span className="font-bold">{time_race}s</span></>
+                        ) : game.type === "survival" ? (
+                            <>Time Survived: <span className="font-bold">{time_survival?.toFixed(2)}s</span></>
+                        ) : (
+                            <>Score: <span className="font-bold">{score.toLocaleString()}</span></>
+                        )}
+                    </p>
                 </div>
                 
                 {!isSoloMode && (
@@ -38,7 +46,7 @@ export default function GameRecordsItem({ record, username }: GameRecordsItemPro
                         {opponents.length > 0 ? (
                             <ul className="text-sm">
                                 {opponents.map((p: any) => (
-                                    <li key={p.id}>{p.user.username} (Score: {p.score})</li>
+                                    <li key={p.id}>{p.user.username} (Score: {(p.score).toLocaleString()})</li>
                                 ))}
                             </ul>
                         ) : (
@@ -59,8 +67,9 @@ export default function GameRecordsItem({ record, username }: GameRecordsItemPro
                 <div className="mt-4 bg-black/30 p-4 rounded max-h-60 overflow-y-auto">
                     {game.questions.length > 0 ? (
                         <ul className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {game.questions.map((q: any) => (
-                                <li key={q.id} className="bg-black/50 p-2 rounded text-center">
+                            {game.questions.map((q: any, index: number) => (
+                                <li key={q.id} className="bg-black/50 p-2 rounded text-center relative pt-4">
+                                    <span className="absolute top-1 left-2 text-xs text-gray-400 font-bold">{index + 1}.</span>
                                     <span className="block font-mono text-sm">{q.question} = ?</span>
                                     <span className="text-green-400 font-bold block mt-1">{q.correctAnswer}</span>
                                 </li>

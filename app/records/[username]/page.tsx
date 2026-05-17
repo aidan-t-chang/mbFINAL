@@ -1,6 +1,7 @@
 import GameRecordsItem from "../GameRecordsItem";
 import Link from "next/link";
 import { getUserByUsername, getUserHistory } from "../../actions";
+import HistoryFilter from "./HistoryFilter";
 
 export default async function Records({ 
     params,
@@ -12,8 +13,9 @@ export default async function Records({
     const { username } = await params;
     const resolvedSearchParams = searchParams ? await searchParams : {};
     const pageStr = resolvedSearchParams.page;
+    const typeFilter = typeof resolvedSearchParams.type === "string" ? resolvedSearchParams.type : "all";
     const currentPage = typeof pageStr === "string" ? parseInt(pageStr, 10) : 1;
-    const skip = (currentPage - 1) * 20;
+    const skip = (currentPage - 1) * 5;
 
     const user = await getUserByUsername(username);
 
@@ -26,15 +28,19 @@ export default async function Records({
         );
     }
 
-    const historyResult = await getUserHistory(username, skip, 20);
+    const historyResult = await getUserHistory(username, skip, 5, typeFilter);
     const history = historyResult.success && historyResult.history ? historyResult.history : [];
     const totalCount = historyResult.success && historyResult.totalCount ? historyResult.totalCount : 0;
-    const totalPages = Math.ceil(totalCount / 20) || 1;
+    const totalPages = Math.ceil(totalCount / 5) || 1;
 
     return (
-        <div className="history-container flex flex-col items-center w-full p-4 max-w-4xl mx-auto text-white">
+        <div className="history-container flex flex-col items-center w-full p-4 max-w-4xl mx-auto text-white relative">
             <h1 className="text-3xl font-bold mb-6">{username}'s Match History</h1>
             
+            <div className="w-full flex justify-end mb-4">
+                <HistoryFilter currentType={typeFilter} username={username} />
+            </div>
+
             {history.length === 0 ? (
                 <p className="text-gray-400">No games played yet.</p>
             ) : (
@@ -52,7 +58,7 @@ export default async function Records({
             {totalPages > 1 && (
                 <div className="flex gap-4 mt-8 items-center">
                     <Link 
-                        href={`/records/${username}?page=${currentPage - 1}`}
+                        href={`/records/${username}?page=${currentPage - 1}&type=${typeFilter}`}
                         className={`px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 ${currentPage <= 1 ? "pointer-events-none opacity-50" : ""}`}
                     >
                         Previous
@@ -61,7 +67,7 @@ export default async function Records({
                         Page {currentPage} of {totalPages}
                     </span>
                     <Link 
-                        href={`/records/${username}?page=${currentPage + 1}`}
+                        href={`/records/${username}?page=${currentPage + 1}&type=${typeFilter}`}
                         className={`px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 ${currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}`}
                     >
                         Next

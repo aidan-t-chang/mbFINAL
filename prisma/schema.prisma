@@ -74,16 +74,18 @@ model Game {
 }
 
 model GamePlayer {
-  id        Int      @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
   
-  gameId    String
-  game      Game     @relation(fields: [gameId], references: [id])
+  gameId         String
+  game           Game     @relation(fields: [gameId], references: [id])
 
-  score     Int      @default(0)
-  isWinner  Boolean  @default(false)
+  score          Int      @default(0)
+  time_race      Float?
+  time_survival  Float?
+  isWinner       Boolean? 
   
   joinedAt  DateTime @default(now())
 

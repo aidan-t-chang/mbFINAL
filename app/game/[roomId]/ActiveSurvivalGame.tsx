@@ -93,7 +93,7 @@ export default function ActiveSurvivalGame() {
 
     useEffect(() => {
         if (gameOver) {
-            saveSurvivalScore(score, questionsAnswered, maxCombo, roomId as string).then(res => {
+            saveSurvivalScore(score, questionsAnswered, maxCombo, roomId as string, timeSurvived).then(res => {
                 if (res.success) {
                     console.log("Survival score saved!", res);
                     setXpData({
@@ -187,7 +187,7 @@ export default function ActiveSurvivalGame() {
                 <h1 className="text-4xl font-bold mb-6">Game Over</h1>
                 <p>your score: {score} ({baseXp}xp)</p>
                 <p>you answered {questionsAnswered} questions ({questionBonus}xp bonus)</p>
-                <p>you survived for {timeSurvived} seconds ({timeSurvivedBonus}xp bonus)</p>
+                <p>you survived for {timeSurvived.toFixed(2)} seconds ({timeSurvivedBonus}xp bonus)</p>
                 
                 <p>total xp gained: {baseXp + questionBonus + timeSurvivedBonus}xp</p>
                 

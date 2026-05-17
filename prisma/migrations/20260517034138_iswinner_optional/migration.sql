@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "GamePlayer" ALTER COLUMN "isWinner" DROP NOT NULL,
+ALTER COLUMN "isWinner" DROP DEFAULT;

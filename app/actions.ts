@@ -537,7 +537,7 @@ export async function getSurvivalBatch(roomId: string, batchSize: number = 50) {
     }
 }
 
-export async function saveSurvivalScore(score: number, questionsAnswered: number, highestCombo: number, roomId: string) {
+export async function saveSurvivalScore(score: number, questionsAnswered: number, highestCombo: number, roomId: string, timeSurvived: number) {
     const user = await getCurrentUser();
     if (!user) {
         return { success: false, error: "Not logged in" };
@@ -548,7 +548,7 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
     if (
         score < 0 || questionsAnswered < 0 || highestCombo < 0 || 
         score > (questionsAnswered * maxPossibleScorePerQuestion) ||
-        highestCombo > questionsAnswered
+        highestCombo > questionsAnswered || timeSurvived < 0
     ) {
         console.error(`Suspicious survival score discarded for user ${user.id}`);
         return { success: false, error: "Suspicious score detected" };
@@ -557,12 +557,15 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
     try {
         const currentUserData = await prisma.user.findUnique({
             where: { id: user.id },
-            select: { bestSurvivalScore: true }
+            select: { bestSurvivalScore: true } 
         });
 
+        // Store timeSurvived (perhaps multiplied by 100 to store as INT, or just store the raw seconds)
+        const scoreToSave = Math.floor(timeSurvived);
+        
         const newBest = currentUserData?.bestSurvivalScore 
-            ? Math.max(currentUserData.bestSurvivalScore, score) 
-            : score;
+            ? Math.max(currentUserData.bestSurvivalScore, scoreToSave) 
+            : scoreToSave;
 
         const baseExp = Math.floor(score / 10);
         const comboBonus = highestCombo * 50;
@@ -581,14 +584,22 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
             }
         });
 
-        // await prisma.gamePlayer.update({
-        //     where: {
-        //         userId_gameId: {
-        //             userId: user.id,
+        // Create the game record so it shows up in history
+        try {
+            await prisma.game.upsert({
+                where: { id: roomId },
+                update: { status: "FINISHED" },
+                create: { id: roomId, status: "FINISHED", type: "survival" }
+            });
 
-        //         }
-        //     }
-        // })
+            await prisma.gamePlayer.upsert({
+                where: { userId_gameId: { userId: user.id, gameId: roomId } },
+                update: { score: score, isWinner: true, time_survival: timeSurvived }, 
+                create: { userId: user.id, gameId: roomId, score: score, isWinner: true, time_survival: timeSurvived }
+            });
+        } catch (dbErr) {
+            console.error("Failed to save solo game/player record:", dbErr);
+        }
 
         return { success: true, newBest, expGained, oldTotalExp, newTotalExp };
     } catch (e) {
@@ -642,6 +653,23 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
             }
         })
 
+        // Create the game record so it shows up in history
+        try {
+            await prisma.game.upsert({
+                where: { id: roomId },
+                update: { status: "FINISHED" },
+                create: { id: roomId, status: "FINISHED", type: "race" }
+            });
+
+            await prisma.gamePlayer.upsert({
+                where: { userId_gameId: { userId: user.id, gameId: roomId } },
+                update: { score: score, isWinner: true, time_race: timeInSeconds },
+                create: { userId: user.id, gameId: roomId, score: score, isWinner: true, time_race: timeInSeconds }
+            });
+        } catch (dbErr) {
+            console.error("Failed to save solo game/player record for race:", dbErr);
+        }
+
         return { success: true, expGained: score, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving race score:", e);
@@ -649,12 +677,22 @@ export async function saveRaceScore(roomId: string, time: number, questionIndex:
     }
 }
 
-export async function getUserHistory(username: string, skip: number = 0, take: number = 20) {
+export async function getUserHistory(username: string, skip: number = 0, take: number = 20, typeFilter?: string) {
     try {
+        const whereClause: any = {
+            user: { username }
+        };
+        
+        if (typeFilter && typeFilter !== "all") {
+            if (typeFilter === "standard") {
+                whereClause.game = { type: { notIn: ["race", "survival"] } }; 
+            } else {
+                whereClause.game = { type: typeFilter };
+            }
+        }
+
         const history = await prisma.gamePlayer.findMany({
-            where: {
-                user: { username }
-            },
+            where: whereClause,
             orderBy: {
                 joinedAt: 'desc'
             },
@@ -677,9 +715,7 @@ export async function getUserHistory(username: string, skip: number = 0, take: n
         });
 
         const totalCount = await prisma.gamePlayer.count({
-            where: {
-                user: { username }
-            }
+            where: whereClause
         });
 
         return { success: true, history, totalCount };

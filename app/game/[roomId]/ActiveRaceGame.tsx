@@ -27,6 +27,8 @@ export default function ActiveRaceGame() {
     const [countdown, setCountdown] = useState(3);
     const [xpData, setXpData] = useState<{ expGained: number, oldTotalExp: number, newTotalExp: number } | null>(null);
 
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const { data: user, isLoading: isUserLoading } = useQuery({
         queryKey: ["currentUser"],
         queryFn: getCurrentUser,
@@ -87,7 +89,10 @@ export default function ActiveRaceGame() {
     useEffect(() => {
         async function fetchMoreQuestions() {
             // Uninterrupted gameplay: If we are close to running out (10 left), fetch 50 more!
-            if (questions.length > 0 && currentIndex >= questions.length - 10 && !isFetchingMore) {
+            // Wait, in a race to 20, we shouldn't ever need to fetch more.
+            // Still, leaving this here in case we ever want to do a "race to 100", 
+            // but we ensure we don't trigger it infinitely.
+            if (questions.length > 0 && currentIndex >= questions.length - 10 && !isFetchingMore && !gameOver) {
                 setIsFetchingMore(true);
                 const moreQs = await generateEzAddition(roomId as string, 50);
                 if (moreQs) {
@@ -117,12 +122,19 @@ export default function ActiveRaceGame() {
         
         const expectedAnswerString = currentQ.correctAnswer.toString();
 
+        // Check for game over BEFORE handling the current answer
+        // to prevent answering the 21st question if currentIndex is somehow exactly 20.
+        // Also the game is over once the 20th question (index 19) is correctly answered.
+        if (currentIndex >= 19 && val.length >= expectedAnswerString.length && parseInt(val) === currentQ.correctAnswer) {
+            setQuestionsAnswered(prev => prev + 1);
+            setGameOver(true);
+            setCurrentInput("");
+            return;
+        }
+
         if (val.length >= expectedAnswerString.length) {
             if (parseInt(val) === currentQ.correctAnswer) {
                 setQuestionsAnswered(prev => prev + 1);
-                if (currentIndex === 21) { // the game is over (20 questions answered)
-                    setGameOver(true);
-                }
                 setCurrentIndex(prev => prev + 1);
                 setCurrentInput("");
             } else {
@@ -131,6 +143,12 @@ export default function ActiveRaceGame() {
                 setIsInputDisabled(true);
                 setTimeout(() => {
                     setIsInputDisabled(false);
+                    // Regain focus after the DOM has updated and the input is no longer disabled
+                    setTimeout(() => {
+                        if (inputRef.current) {
+                            inputRef.current.focus();
+                        }
+                    }, 0);
                 }, 400);
             }
         }
@@ -192,6 +210,7 @@ export default function ActiveRaceGame() {
             <div className="questions-container">
                 <h1 className="cur-question">{currentQ?.question}</h1>
                 <input 
+                    ref={inputRef}
                     type="text"
                     value={currentInput}
                     onChange={handleInput}
