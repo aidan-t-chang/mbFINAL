@@ -33,6 +33,7 @@ model User {
   friends              Int          @default(0)
   mbrr                 Int          @default(1000) // mathblitz rank rating
   bestSurvivalScore    Int          @default(0)
+  bestSurvivalTime     Float        @default(0.0)
   bestScore            Int          @default(0)
   bestRaceTime         Float        @default(0.0)
   

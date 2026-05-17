@@ -98,44 +98,6 @@ export default function ActiveGame({ socket }: { socket: WebSocket | null }, isC
         }
     }, [user, isUserLoading, router, socket, roomId, opponentUsername]);
 
-    // useEffect(() => {
-    //     async function setUpGame() {
-    //         const currentUser = await getCurrentUser();
-    //         if (!currentUser) {
-    //             return router.push("/login");
-    //         }
-
-    //         if (socket) {
-    //             socket.onmessage = async (event) => {
-    //                 const data = JSON.parse(event.data);
-
-    //                 if (data.type === "QUESTIONS_READY") {
-    //                     const gameQuestions = await getGameQuestions(roomId as string);
-    //                     setQuestions(gameQuestions);
-    //                 }
-
-    //                 if (data.type === "GAME_ACTION" && data.user.id !== currentUser.id) {
-    //                     if (!opponentUsername) {
-    //                         setOpponentUsername(data.user.username);
-    //                     }
-    //                     if (data.action === "CORRECT_ANSWER") {
-    //                         if (data.score !== undefined) {
-    //                             setOpponentScore(data.score);
-    //                         }
-    //                         if (data.combo !== undefined) {
-    //                             setOpponentCombo(data.combo);
-    //                         } 
-    //                         if (data.comboLevel !== undefined) {
-    //                             setOpponentComboLevel(data.comboLevel);
-    //                         }
-    //                     }
-    //                 }
-    //             };
-    //         }
-    //     }
-    //     setUpGame();
-    // }, [roomId, router, socket]);
-
     useEffect(() => {
         if (!user || questions.length === 0 || gameOver) return;
 

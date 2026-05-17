@@ -135,6 +135,7 @@ async function getCurrentUser() {
             avgAnswerTime: true,
             friends: true,
             bestSurvivalScore: true,
+            bestSurvivalTime: true,
             bestRaceTime: true,
         }
     });
@@ -481,11 +482,17 @@ export async function searchUsers(searchTerm: string) {
     }
 }
 
-export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" | "bestSurvivalScore" | "bestRaceTime" = "mbrr") {
+export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "totalExp" | "bestSurvivalTime" | "bestRaceTime" = "mbrr") {
     try {
         const topUsers = await prisma.user.findMany({
             take: limit,
-            where: byWhat === "bestRaceTime" ? { bestRaceTime: { gt: 0 } } : undefined,
+            where: byWhat === "bestRaceTime" 
+                ? { bestRaceTime: { gt: 0 } } 
+                : byWhat === "bestSurvivalTime"
+                ? { bestSurvivalTime: { gt: 0 } }
+                : byWhat === "totalExp"
+                ? { totalExp: { gt: 0 } }
+                : undefined,
             orderBy: { [byWhat]: byWhat === "bestRaceTime" ? "asc" : "desc" },
             select: {
                 id: true,
@@ -494,7 +501,7 @@ export async function getLeaderboard(limit: number = 50, byWhat: "mbrr" | "total
                 rank: true,
                 level: true,
                 totalExp: true,
-                bestSurvivalScore: true,
+                bestSurvivalTime: true,
                 bestRaceTime: true,
             }
         })
@@ -557,15 +564,16 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
     try {
         const currentUserData = await prisma.user.findUnique({
             where: { id: user.id },
-            select: { bestSurvivalScore: true } 
+            select: { bestSurvivalScore: true, bestSurvivalTime: true } 
         });
 
-        // Store timeSurvived (perhaps multiplied by 100 to store as INT, or just store the raw seconds)
-        const scoreToSave = Math.floor(timeSurvived);
-        
-        const newBest = currentUserData?.bestSurvivalScore 
-            ? Math.max(currentUserData.bestSurvivalScore, scoreToSave) 
-            : scoreToSave;
+        const newBestScore = currentUserData?.bestSurvivalScore 
+            ? Math.max(currentUserData.bestSurvivalScore, score) 
+            : score;
+            
+        const newBestTime = currentUserData?.bestSurvivalTime 
+            ? Math.max(currentUserData.bestSurvivalTime, timeSurvived) 
+            : timeSurvived;
 
         const baseExp = Math.floor(score / 10);
         const comboBonus = highestCombo * 50;
@@ -578,7 +586,8 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
         await prisma.user.update({
             where: { id: user.id },
             data: {
-                bestSurvivalScore: newBest,
+                bestSurvivalScore: newBestScore,
+                bestSurvivalTime: newBestTime,
                 totalExp: { increment: expGained },
                 gamesPlayed: { increment: 1 }
             }
@@ -601,10 +610,31 @@ export async function saveSurvivalScore(score: number, questionsAnswered: number
             console.error("Failed to save solo game/player record:", dbErr);
         }
 
-        return { success: true, newBest, expGained, oldTotalExp, newTotalExp };
+        return { success: true, newBestScore, newBestTime, expGained, oldTotalExp, newTotalExp };
     } catch (e) {
         console.error("Error saving survival score:", e);
         return { success: false, error: "Failed to save score" };
+    }
+}
+
+export async function createSoloGame(roomId: string, mode: string) {
+    const user = await getCurrentUser();
+    if (!user) return;
+    
+    try {
+        await prisma.game.upsert({
+            where: { id: roomId },
+            update: {},
+            create: { id: roomId, status: "PLAYING", type: mode }
+        });
+
+        await prisma.gamePlayer.upsert({
+            where: { userId_gameId: { userId: user.id, gameId: roomId } },
+            update: {},
+            create: { userId: user.id, gameId: roomId, score: 0 }
+        });
+    } catch (e) {
+        console.error("Error creating solo game:", e);
     }
 }
 

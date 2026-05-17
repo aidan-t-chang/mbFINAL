@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getCurrentUser, cleanUpQuestions } from "../../actions";
+import { getCurrentUser, cleanUpQuestions, createSoloGame } from "../../actions";
 import { useQuery } from "@tanstack/react-query";
 import { generateEzAddition } from "../../actions";
 import { saveRaceScore } from "../../actions";
@@ -33,6 +33,12 @@ export default function ActiveRaceGame() {
         queryKey: ["currentUser"],
         queryFn: getCurrentUser,
     });
+
+    useEffect(() => {
+        if (roomId && user) {
+            createSoloGame(roomId as string, "race");
+        }
+    }, [roomId, user]);
 
     // fetch first 50 questions
     const { data: initialQuestions, isLoading: areQuestionsLoading } = useQuery({
@@ -88,10 +94,6 @@ export default function ActiveRaceGame() {
 
     useEffect(() => {
         async function fetchMoreQuestions() {
-            // Uninterrupted gameplay: If we are close to running out (10 left), fetch 50 more!
-            // Wait, in a race to 20, we shouldn't ever need to fetch more.
-            // Still, leaving this here in case we ever want to do a "race to 100", 
-            // but we ensure we don't trigger it infinitely.
             if (questions.length > 0 && currentIndex >= questions.length - 10 && !isFetchingMore && !gameOver) {
                 setIsFetchingMore(true);
                 const moreQs = await generateEzAddition(roomId as string, 50);
@@ -122,9 +124,6 @@ export default function ActiveRaceGame() {
         
         const expectedAnswerString = currentQ.correctAnswer.toString();
 
-        // Check for game over BEFORE handling the current answer
-        // to prevent answering the 21st question if currentIndex is somehow exactly 20.
-        // Also the game is over once the 20th question (index 19) is correctly answered.
         if (currentIndex >= 19 && val.length >= expectedAnswerString.length && parseInt(val) === currentQ.correctAnswer) {
             setQuestionsAnswered(prev => prev + 1);
             setGameOver(true);
