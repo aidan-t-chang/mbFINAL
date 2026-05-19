@@ -1,4 +1,5 @@
 export const isDev = false;
+export const APP_VERSION = "v0.1.3";
 
 export function calculateLevel(totalExp: number) {
     let level = 0;

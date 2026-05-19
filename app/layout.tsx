@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 import Providers from "./Providers";
 import "./globals.css";
+import PatchNotesModal from "./PatchNotesModal";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +33,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning={true}>
         <Providers>
+          <PatchNotesModal />
           {children}
           <Toaster />
         </Providers>
-        <p className="fixed bottom-4 right-4 text-sm text-muted-foreground">Pre-Alpha v0.1.2</p>
       </body>
     </html>
   );
